@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  api:
+    build: ./services/api
+    deploy:
+      replicas: 2
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: servis
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
