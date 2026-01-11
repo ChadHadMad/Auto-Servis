@@ -1,12 +1,21 @@
 version: "3.9"
 
 services:
-  api:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+
+  haproxy:
+    image: haproxy:2.9
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+
+  api1:
     build: ./services/api
-    deploy:
-      replicas: 2
-    depends_on:
-      - db
+
+  api2:
+    build: ./services/api
 
   db:
     image: postgres:15
@@ -15,7 +24,8 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
 
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "8080:80"
+  rabbitmq:
+    image: rabbitmq:3-management
+
+  memcached:                 
+    image: memcached:alpine

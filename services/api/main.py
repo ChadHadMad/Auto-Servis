@@ -8,8 +8,12 @@ def create_order(order: dict):
     return {"msg": "order created"}
 
 @app.get("/orders")
-def list_orders():
-    return []
+def list_orders(
+    status: str | None = Query(default=None),
+    date: date | None = Query(default=None),
+    db: Session = Depends(get_db)
+):
+    return get_orders(db, status, date)
 
 @app.put("/orders/{id}/status")
 def update_status(id: str, status: str):
