@@ -10,8 +10,8 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    customer_name = Column(String)
-    vehicle = Column(String)
-    service_date = Column(Date)
-    status = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    customer_name = Column(String, nullable=False)
+    vehicle = Column(String, nullable=False)
+    service_date = Column(Date, nullable=False)
+    status = Column(String, nullable=False, default="created")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
