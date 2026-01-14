@@ -1,36 +1,42 @@
-version: "3.9"
-
 services:
   nginx:
     image: nginx:alpine
     ports:
       - "8080:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
     depends_on:
       - haproxy
+    networks:
+      autoservis-net:
+        aliases:
+          - nginx
 
   haproxy:
     image: haproxy:2.9
     volumes:
-      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
     depends_on:
       - api1
       - api2
+    networks:
+      autoservis-net:
+        aliases:
+          - haproxy
 
   api1:
-    build: ./services/api
+    build: ./services/apissssss
     environment:
-      DATABASE_URL: postgresql+psycopg2://user:pass@db:5432/servis
-    depends_on:
-      - db
+      - API_NAME=ap1
+    networks:
+      - autoservis-net
 
   api2:
     build: ./services/api
     environment:
-      DATABASE_URL: postgresql+psycopg2://user:pass@db:5432/servis
-    depends_on:
-      - db
+      - API_NAME=ap2
+    networks:
+      - autoservis-net
 
   db:
     image: postgres:15
@@ -38,14 +44,20 @@ services:
       POSTGRES_DB: servis
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
-    volumes:
-      - dbdata:/var/lib/postgresql/data
+    networks:
+      - autoservis-net
 
   rabbitmq:
     image: rabbitmq:3-management
+    networks:
+      - autoservis-net
 
   memcached:
     image: memcached:alpine
+    networks:
+      - autoservis-net
 
-volumes:
-  dbdata:
+networks:
+  autoservis-net:
+    name: autoservis-net
+    driver: bridge

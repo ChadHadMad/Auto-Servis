@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from fastapi import FastAPI, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from datetime import date
@@ -52,3 +53,60 @@ def cancel_order(order_id: UUID, db: Session = Depends(get_db)):
     if not cancelled:
         raise HTTPException(status_code=404, detail="Order not found")
     return cancelled
+=======
+import os
+from fastapi import FastAPI, Query, Depends
+from datetime import date as Date
+from sqlalchemy.orm import Session
+from typing import List
+from pydantic import BaseModel
+from enum import Enum
+from uuid import UUID
+
+from db import get_db
+from crud import get_orders
+
+app = FastAPI()
+
+
+class OrderStatus(str, Enum):
+    pending = "pending"
+    confirmed = "confirmed"
+    cancelled = "cancelled"
+
+
+class OrderCreate(BaseModel):
+    customer_name: str
+    vehicle: str
+    status: OrderStatus
+    service_date: Date
+
+
+class OrderOut(BaseModel):
+    id: UUID
+    status: OrderStatus
+    service_date: Date
+
+    class Config:
+        from_attributes = True
+
+
+@app.get("/health")
+def health():
+    api_name = os.getenv("API_NAME", "unknown")
+    return {"status": "ok", "api": api_name}
+
+
+@app.post("/orders")
+def create_order(order: OrderCreate, db: Session = Depends(get_db)):
+    return {"msg": "order created"} 
+
+
+@app.get("/orders", response_model=List[OrderOut])
+def list_orders(
+    status: str | None = Query(default=None),
+    service_date: Date | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    return get_orders(db, status, service_date)
+>>>>>>> 4872ed1 (Popravljen load balancing i startanje API1 i API2 kada se pokrene docker)

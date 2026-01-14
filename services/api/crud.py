@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from sqlalchemy.orm import Session
 from datetime import date
 from models import Order
@@ -15,6 +16,20 @@ def create_order(db: Session, customer_name: str, vehicle: str, service_date: da
     return order
 
 def get_orders(db: Session, status: str | None = None, service_date: date | None = None):
+=======
+from datetime import date as Date
+from typing import Optional
+from sqlalchemy.orm import Session
+
+from models import Order
+
+
+def get_orders(
+    db: Session,
+    status: Optional[str],
+    service_date: Optional[Date],
+) -> list[Order]:
+>>>>>>> 4872ed1 (Popravljen load balancing i startanje API1 i API2 kada se pokrene docker)
     query = db.query(Order)
 
     if status:
