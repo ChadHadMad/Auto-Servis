@@ -1,9 +1,10 @@
-<<<<<<< HEAD
-from sqlalchemy.orm import Session
 from datetime import date
+from sqlalchemy.orm import Session
+
 from models import Order
 
-def create_order(db: Session, customer_name: str, vehicle: str, service_date: date):
+
+def create_order(db: Session, customer_name: str, vehicle: str, service_date: date) -> Order:
     order = Order(
         customer_name=customer_name,
         vehicle=vehicle,
@@ -15,21 +16,12 @@ def create_order(db: Session, customer_name: str, vehicle: str, service_date: da
     db.refresh(order)
     return order
 
-def get_orders(db: Session, status: str | None = None, service_date: date | None = None):
-=======
-from datetime import date as Date
-from typing import Optional
-from sqlalchemy.orm import Session
-
-from models import Order
-
 
 def get_orders(
     db: Session,
-    status: Optional[str],
-    service_date: Optional[Date],
+    status: str | None = None,
+    service_date: date | None = None,
 ) -> list[Order]:
->>>>>>> 4872ed1 (Popravljen load balancing i startanje API1 i API2 kada se pokrene docker)
     query = db.query(Order)
 
     if status:
@@ -40,10 +32,12 @@ def get_orders(
 
     return query.order_by(Order.created_at.desc()).all()
 
+
 def get_order_by_id(db: Session, order_id):
     return db.query(Order).filter(Order.id == order_id).first()
 
-def update_order_status(db: Session, order_id, new_status: str):
+
+def update_order_status(db: Session, order_id, new_status: str) -> Order | None:
     order = get_order_by_id(db, order_id)
     if not order:
         return None
@@ -52,6 +46,6 @@ def update_order_status(db: Session, order_id, new_status: str):
     db.refresh(order)
     return order
 
-def cancel_order(db: Session, order_id):
-    # po planu: "otkazati narudžbu" — najčešće je bolje set status nego delete
+
+def cancel_order(db: Session, order_id) -> Order | None:
     return update_order_status(db, order_id, "cancelled")

@@ -25,7 +25,7 @@ services:
           - haproxy
 
   api1:
-    build: ./services/apissssss
+    build: ./services/api
     environment:
       - API_NAME=ap1
     networks:
