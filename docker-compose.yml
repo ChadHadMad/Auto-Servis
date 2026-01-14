@@ -28,6 +28,8 @@ services:
     build: ./services/api
     environment:
       - API_NAME=ap1
+      - RABBIT_HOST=rabbitmq
+      - RABBIT_QUEUE=order_status_events
     networks:
       - autoservis-net
 
@@ -35,6 +37,20 @@ services:
     build: ./services/api
     environment:
       - API_NAME=ap2
+      - RABBIT_HOST=rabbitmq
+      - RABBIT_QUEUE=order_status_events
+    networks:
+      - autoservis-net
+
+  worker:
+    build: ./services/api
+    command: ["python", "-u", "worker.py"]
+    environment:
+      - RABBIT_HOST=rabbitmq
+      - RABBIT_QUEUE=order_status_events
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - rabbitmq
     networks:
       - autoservis-net
 
