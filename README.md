@@ -17,4 +17,6 @@ for i in {1..10}; do curl -s http://localhost:8080/health; echo; done
 
 3. faza: Uvedeno asinkrono generiranje mjesečnih izvještaja o servisnim aktivnostima i korištenju dijelova koristeći job schedulere (npr. Apache Airflow). Implementirano monitoriranje performansi i opterećenja korištenjem Prometheusa za prikupljanje metrika i Grafane za vizualizaciju.
 
+## <span style="color:purple">Nakon što otkriješ da si nekako instalirao docker 2 puta</text>
+
 ![Monkey](https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg)
