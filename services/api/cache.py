@@ -1,5 +1,7 @@
 import os
 import json
+from uuid import UUID
+from datetime import date, datetime
 from pymemcache.client.base import Client
 
 MEMCACHED_HOST = os.getenv("MEMCACHED_HOST", "memcached")
@@ -14,7 +16,15 @@ def get_json(key: str):
     return json.loads(val.decode("utf-8"))
 
 def set_json(key: str, value, ttl: int = 30):
-    client.set(key, json.dumps(value).encode("utf-8"), expire=ttl)
+    def json_serializer(obj):
+        if isinstance(obj, UUID):
+            return str(obj)
+        if isinstance(obj, (date, datetime)):
+            return obj.isoformat()
+        raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
+    json_data = json.dumps(value, default=json_serializer).encode("utf-8")
+    client.set(key, json_data, expire=ttl)
 
 def delete(key: str):
     client.delete(key)

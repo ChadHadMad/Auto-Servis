@@ -1,0 +1,22 @@
+# Osnovne postavke
+
+myhostname = relay.autoservis.local
+mydomain = autoservis.local
+myorigin = $mydomain
+
+# Dozvoli pristup samo iz Docker mreže (prilagodi subnet tvoje mreže)
+mynetworks = 127.0.0.0/8, 172.18.0.0/16
+
+relayhost = [smtp.gmail.com]:587
+
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_use_tls = yes
+smtp_tls_security_level = encrypt
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+maillog_file = /dev/stdout
+
+# Ostale postavke
+inet_interfaces = all
+inet_protocols = ipv4

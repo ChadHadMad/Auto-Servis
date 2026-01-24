@@ -27,18 +27,18 @@ services:
   api1:
     build: ./services/api
     environment:
-      - API_NAME=ap1
-      - RABBIT_HOST=rabbitmq
-      - RABBIT_QUEUE=order_status_events
+      API_NAME: ap1
+      RABBIT_HOST: rabbitmq
+      RABBIT_QUEUE: order_status_events
     networks:
       - autoservis-net
 
   api2:
     build: ./services/api
     environment:
-      - API_NAME=ap2
-      - RABBIT_HOST=rabbitmq
-      - RABBIT_QUEUE=order_status_events
+      API_NAME: ap2
+      RABBIT_HOST: rabbitmq
+      RABBIT_QUEUE: order_status_events
     networks:
       - autoservis-net
 
@@ -46,11 +46,18 @@ services:
     build: ./services/api
     command: ["python", "-u", "worker.py"]
     environment:
-      - RABBIT_HOST=rabbitmq
-      - RABBIT_QUEUE=order_status_events
-      - PYTHONUNBUFFERED=1
+      RABBIT_HOST: rabbitmq
+      RABBIT_QUEUE: order_status_events
+      BOSS_EMAIL: enigmas.smm@gmail.com
+      EMAIL_USER: smiklosevic.smm@gmail.com
+      EMAIL_PASS: luhnaylpbgiwfxvk
     depends_on:
       - rabbitmq
+    networks:
+      - autoservis-net
+
+  postfix-relay:
+    build: ./services/postfix-relay
     networks:
       - autoservis-net
 
@@ -75,5 +82,4 @@ services:
 
 networks:
   autoservis-net:
-    name: autoservis-net
     driver: bridge
