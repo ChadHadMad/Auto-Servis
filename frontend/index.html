@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <title>Autoservis – Status vozila</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        input, select, button { padding: 8px; margin: 5px 0; width: 300px; }
+        button { cursor: pointer; }
+        .log { margin-top: 20px; white-space: pre; background: #f4f4f4; padding: 10px; }
+    </style>
+</head>
+<body>
+
+<h2>Promjena statusa vozila</h2>
+
+<label>ID vozila</label><br>
+<input id="orderId" placeholder="npr. 101"><br>
+
+<label>Status</label><br>
+<select id="status">
+    <option value="in_progress">U tijeku</option>
+    <option value="finished">Završeno</option>
+    <option value="cancelled">Otkazano</option>
+</select><br>
+
+<button onclick="send()">Pošalji status</button>
+
+<div class="log" id="log"></div>
+
+<script>
+function send() {
+    const payload = {
+        event: "order_status_changed",
+        order_id: document.getElementById("orderId").value,
+        new_status: document.getElementById("status").value,
+        service_date: new Date().toISOString().split("T")[0]
+    };
+
+    fetch("/api/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("log").textContent =
+            "Poslano:\n" + JSON.stringify(data, null, 2);
+    })
+    .catch(err => {
+        document.getElementById("log").textContent = err;
+    });
+}
+</script>
+
+</body>
+</html>
