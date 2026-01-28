@@ -2,30 +2,27 @@
 <html lang="hr">
 <head>
     <meta charset="UTF-8">
-    <title>Autoservis</title>
+    <title>Autoservis – Narudžbe</title>
     <style>
         body { font-family: Arial; margin: 40px; }
-        input, button, select { padding: 8px; margin: 5px 0; }
-        table { border-collapse: collapse; margin-top: 20px; width: 100%; }
+        input, select, button { padding: 6px; margin: 4px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 8px; }
         th { background: #eee; }
+        button { cursor: pointer; }
     </style>
 </head>
 <body>
 
-<h2>➕ Nova narudžba</h2>
+<h2>Nova narudžba</h2>
 
-<input id="customer" placeholder="Ime klijenta"><br>
-<input id="vehicle" placeholder="Vozilo"><br>
-<input id="date" type="date"><br>
-<button onclick="createOrder()">Spremi</button>
+<input id="customer" placeholder="Ime klijenta">
+<input id="vehicle" placeholder="Vozilo">
+<input id="date" type="date">
+<button onclick="createOrder()">Dodaj</button>
 
-<hr>
-
-<h2>📋 Narudžbe</h2>
-<button onclick="loadOrders()">Osvježi</button>
-
-<table>
+<h2>Popis narudžbi</h2>
+<table id="orders">
     <thead>
         <tr>
             <th>ID</th>
@@ -33,57 +30,80 @@
             <th>Vozilo</th>
             <th>Datum</th>
             <th>Status</th>
-            <th>Akcija</th>
+            <th>Akcije</th>
         </tr>
     </thead>
-    <tbody id="orders"></tbody>
+    <tbody></tbody>
 </table>
 
 <script>
-function createOrder() {
-    fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            customer_name: document.getElementById("customer").value,
-            vehicle: document.getElementById("vehicle").value,
-            service_date: document.getElementById("date").value
-        })
-    })
-    .then(() => loadOrders());
-}
+const API = "/api";
 
 function loadOrders() {
-    fetch("/api/orders")
-        .then(res => res.json())
+    fetch(`${API}/orders`)
+        .then(r => r.json())
         .then(data => {
-            const tbody = document.getElementById("orders");
+            const tbody = document.querySelector("#orders tbody");
             tbody.innerHTML = "";
 
             data.forEach(o => {
                 tbody.innerHTML += `
-                    <tr>
-                        <td>${o.id}</td>
-                        <td>${o.customer_name}</td>
-                        <td>${o.vehicle}</td>
-                        <td>${o.service_date}</td>
-                        <td>${o.status}</td>
-                        <td>
-                            <button onclick="setStatus('${o.id}', 'finished')">
-                                Završeno
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                <tr>
+                    <td>${o.id}</td>
+                    <td>${o.customer_name}</td>
+                    <td>${o.vehicle}</td>
+                    <td>${o.service_date}</td>
+                    <td>
+                        <select onchange="updateStatus('${o.id}', this.value)">
+                            ${["created","in_progress","finished","cancelled"]
+                                .map(s =>
+                                    `<option value="${s}" ${s === o.status ? "selected" : ""}>${s}</option>`
+                                )
+                                .join("")}
+                        </select>
+                    </td>
+                    <td>
+                        <button onclick="deleteOrder('${o.id}')">🗑 Obriši</button>
+                    </td>
+                </tr>`;
             });
-        });
+        })
+        .catch(err => alert("Greška pri dohvaćanju narudžbi: " + err));
 }
 
-function setStatus(id, status) {
-    fetch(`/api/orders/${id}/status?status=${status}`, {
+function createOrder() {
+    fetch(`${API}/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            customer_name: customer.value,
+            vehicle: vehicle.value,
+            service_date: date.value
+        })
+    })
+    .then(() => {
+        customer.value = "";
+        vehicle.value = "";
+        date.value = "";
+        loadOrders();
+    })
+    .catch(err => alert("Greška pri dodavanju narudžbe: " + err));
+}
+
+function updateStatus(id, status) {
+    fetch(`${API}/orders/${id}/status?status=${status}`, {
         method: "PUT"
     })
-    .then(() => loadOrders());
+    .then(loadOrders)
+    .catch(err => alert("Greška pri promjeni statusa: " + err));
+}
+
+function deleteOrder(id) {
+    if (!confirm("Sigurno obrisati narudžbu?")) return;
+
+    fetch(`${API}/orders/${id}`, { method: "DELETE" })
+        .then(loadOrders)
+        .catch(err => alert("Greška pri brisanju: " + err));
 }
 
 loadOrders();
