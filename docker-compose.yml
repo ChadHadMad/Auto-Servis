@@ -32,6 +32,8 @@ services:
       API_NAME: ap1
       RABBIT_HOST: rabbitmq
       RABBIT_QUEUE: order_status_events
+      SEED_ADMIN_EMAIL: admin@autoservis.com
+      SEED_ADMIN_PASSWORD: admin123
     networks:
       - autoservis-net
 
@@ -41,6 +43,8 @@ services:
       API_NAME: ap2
       RABBIT_HOST: rabbitmq
       RABBIT_QUEUE: order_status_events
+      SEED_ADMIN_EMAIL: admin@autoservis.com
+      SEED_ADMIN_PASSWORD: admin123
     networks:
       - autoservis-net
 

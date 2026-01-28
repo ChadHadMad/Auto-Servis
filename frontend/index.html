@@ -1,113 +1,173 @@
 <!DOCTYPE html>
 <html lang="hr">
 <head>
-    <meta charset="UTF-8">
-    <title>Autoservis – Narudžbe</title>
-    <style>
-        body { font-family: Arial; margin: 40px; }
-        input, select, button { padding: 6px; margin: 4px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; }
-        th { background: #eee; }
-        button { cursor: pointer; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Autoservis – Prijava</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 900px; }
+    h1 { margin-bottom: 10px; }
+    .row { display: flex; gap: 24px; flex-wrap: wrap; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; width: 380px; }
+    label { display:block; margin: 10px 0 6px; font-weight: 600; }
+    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+    button { margin-top: 14px; padding: 10px 12px; border: 0; border-radius: 6px; cursor: pointer; }
+    button.primary { background: #222; color: #fff; }
+    button.secondary { background: #eee; }
+    .msg { margin-top: 10px; white-space: pre-wrap; }
+    .ok { color: #0a7a0a; }
+    .err { color: #b00020; }
+    .small { color: #666; font-size: 12px; margin-top: 6px; }
+    .topbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; }
+    .pill { font-size: 12px; padding: 6px 10px; border-radius: 999px; background:#f2f2f2; }
+  </style>
 </head>
 <body>
+  <div class="topbar">
+    <h1>Autoservis</h1>
+    <div class="pill" id="statusPill">Niste prijavljeni</div>
+  </div>
 
-<h2>Nova narudžba</h2>
+  <p class="small">
+    Nakon prijave sprema se token u browser (localStorage) i preusmjerava na dashboard.
+  </p>
 
-<input id="customer" placeholder="Ime klijenta">
-<input id="vehicle" placeholder="Vozilo">
-<input id="date" type="date">
-<button onclick="createOrder()">Dodaj</button>
+  <div class="row">
+    <!-- LOGIN -->
+    <div class="card">
+      <h2>Prijava</h2>
 
-<h2>Popis narudžbi</h2>
-<table id="orders">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Klijent</th>
-            <th>Vozilo</th>
-            <th>Datum</th>
-            <th>Status</th>
-            <th>Akcije</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
-</table>
+      <label for="loginEmail">Email</label>
+      <input id="loginEmail" type="email" placeholder="npr. user@test.com" />
 
-<script>
-const API = "/api";
+      <label for="loginPass">Lozinka</label>
+      <input id="loginPass" type="password" placeholder="••••••••" />
 
-function loadOrders() {
-    fetch(`${API}/orders`)
-        .then(r => r.json())
-        .then(data => {
-            const tbody = document.querySelector("#orders tbody");
-            tbody.innerHTML = "";
+      <button class="primary" onclick="login()">Prijavi se</button>
+      <button class="secondary" onclick="fillDemo()">Popuni demo</button>
 
-            data.forEach(o => {
-                tbody.innerHTML += `
-                <tr>
-                    <td>${o.id}</td>
-                    <td>${o.customer_name}</td>
-                    <td>${o.vehicle}</td>
-                    <td>${o.service_date}</td>
-                    <td>
-                        <select onchange="updateStatus('${o.id}', this.value)">
-                            ${["created","in_progress","finished","cancelled"]
-                                .map(s =>
-                                    `<option value="${s}" ${s === o.status ? "selected" : ""}>${s}</option>`
-                                )
-                                .join("")}
-                        </select>
-                    </td>
-                    <td>
-                        <button onclick="deleteOrder('${o.id}')">🗑 Obriši</button>
-                    </td>
-                </tr>`;
-            });
-        })
-        .catch(err => alert("Greška pri dohvaćanju narudžbi: " + err));
-}
+      <div id="loginMsg" class="msg"></div>
+    </div>
 
-function createOrder() {
-    fetch(`${API}/orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            customer_name: customer.value,
-            vehicle: vehicle.value,
-            service_date: date.value
-        })
-    })
-    .then(() => {
-        customer.value = "";
-        vehicle.value = "";
-        date.value = "";
-        loadOrders();
-    })
-    .catch(err => alert("Greška pri dodavanju narudžbe: " + err));
-}
+    <!-- REGISTER -->
+    <div class="card">
+      <h2>Registracija (customer)</h2>
 
-function updateStatus(id, status) {
-    fetch(`${API}/orders/${id}/status?status=${status}`, {
-        method: "PUT"
-    })
-    .then(loadOrders)
-    .catch(err => alert("Greška pri promjeni statusa: " + err));
-}
+      <label for="regEmail">Email</label>
+      <input id="regEmail" type="email" placeholder="npr. novi@user.com" />
 
-function deleteOrder(id) {
-    if (!confirm("Sigurno obrisati narudžbu?")) return;
+      <label for="regPass">Lozinka</label>
+      <input id="regPass" type="password" placeholder="min 6 znakova" />
 
-    fetch(`${API}/orders/${id}`, { method: "DELETE" })
-        .then(loadOrders)
-        .catch(err => alert("Greška pri brisanju: " + err));
-}
+      <button class="primary" onclick="register()">Registriraj</button>
 
-loadOrders();
-</script>
+      <div id="regMsg" class="msg"></div>
+      <div class="small">
+        Registracija kreira korisnika s ulogom <b>customer</b>. Ulogu kasnije mijenja admin.
+      </div>
+    </div>
+  </div>
 
+  <script>
+    const API = "/api";
+
+    function setMsg(el, text, ok=false) {
+      el.textContent = text;
+      el.className = "msg " + (ok ? "ok" : "err");
+    }
+
+    function setStatusPill() {
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+      const pill = document.getElementById("statusPill");
+      if (token && role) pill.textContent = "Prijavljeni ste kao: " + role;
+      else pill.textContent = "Niste prijavljeni";
+    }
+
+    (function autoRedirectIfLoggedIn(){
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+      setStatusPill();
+      if (token && role) {
+        window.location.href = "/dashboard.html";
+      }
+    })();
+
+    function fillDemo() {
+      document.getElementById("loginEmail").value = "user@test.com";
+      document.getElementById("loginPass").value = "pass123";
+    }
+
+    async function login() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPass").value;
+      const msgEl = document.getElementById("loginMsg");
+      msgEl.textContent = "";
+
+      if (!email || !password) {
+        setMsg(msgEl, "Unesi email i lozinku.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Login neuspješan.");
+          return;
+        }
+
+        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("role", data.role);
+
+        setMsg(msgEl, "OK! Preusmjeravam...", true);
+        setStatusPill();
+
+        window.location.href = "/dashboard.html";
+      } catch (e) {
+        setMsg(msgEl, "Greška: " + e);
+      }
+    }
+
+    async function register() {
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPass").value;
+      const msgEl = document.getElementById("regMsg");
+      msgEl.textContent = "";
+
+      if (!email || !password) {
+        setMsg(msgEl, "Unesi email i lozinku.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Registracija neuspješna.");
+          return;
+        }
+
+        setMsg(msgEl, "Registracija OK! Sada se možeš prijaviti.", true);
+
+        document.getElementById("loginEmail").value = email;
+        document.getElementById("loginPass").value = password;
+      } catch (e) {
+        setMsg(msgEl, "Greška: " + e);
+      }
+    }
+  </script>
 </body>
 </html>

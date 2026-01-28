@@ -8,11 +8,15 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-
 import crud
 from db import engine, get_db
 from models import Base
-from schemas import OrderCreate, OrderOut
+from schemas import (
+    RegisterIn, LoginIn, TokenOut, UserOut, RoleUpdateIn,
+    OrderCreate, OrderOut,
+)
+
+from auth import hash_password, verify_password, create_access_token, get_current_user, require_role
 
 from mq import publish_status_event
 from cache import get_json, set_json, delete
@@ -26,7 +30,6 @@ CACHE_TTL_SECONDS = 30
 
 @app.on_event("startup")
 def on_startup():
-    # wait for DB to accept connections (prevents crash on container start)
     for _ in range(30):
         try:
             with engine.connect() as conn:
@@ -38,11 +41,26 @@ def on_startup():
     try:
         Base.metadata.create_all(bind=engine)
     except IntegrityError:
-        # Kad se api1 i api2 dižu paralelno, jedan može dobiti race-condition na DDL.
-        # Ako tablica već postoji, možemo ignorirati.
         pass
 
+    admin_email = os.getenv("ADMIN_EMAIL", "admin@autoservis.com")
+    admin_pass = os.getenv("ADMIN_PASSWORD", "admin123")
 
+    db = next(get_db())
+    try:
+        existing = crud.get_user_by_email(db, admin_email)
+        if not existing:
+            crud.create_user(
+                db,
+                admin_email,
+                hash_password(admin_pass),
+                role="admin"
+            )
+            print("[startup] Admin user created")
+        else:
+            print("[startup] Admin already exists, skipping seed")
+    finally:
+        db.close()
 
 
 @app.get("/health")
@@ -51,13 +69,77 @@ def health():
     return {"status": "ok", "api": api_name}
 
 
-@app.post("/orders", response_model=OrderOut)
-def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
-    created = crud.create_order(db, payload.customer_name, payload.vehicle, payload.service_date)
+# ---------- AUTH ----------
+@app.post("/auth/register", response_model=UserOut)
+def register(payload: RegisterIn, db: Session = Depends(get_db)):
+    existing = crud.get_user_by_email(db, payload.email)
+    if existing:
+        raise HTTPException(status_code=409, detail="Email already exists")
+    user = crud.create_user(db, payload.email, hash_password(payload.password), role="customer")
+    return user
 
-    # Phase 2 cache invalidation
+
+@app.post("/auth/login", response_model=TokenOut)
+def login(payload: LoginIn, db: Session = Depends(get_db)):
+    user = crud.get_user_by_email(db, payload.email)
+    if not user or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = create_access_token(user.id, user.role)
+    return TokenOut(access_token=token, role=user.role)
+
+
+@app.get("/auth/me", response_model=UserOut)
+def me(user=Depends(get_current_user)):
+    return user
+
+
+# ---------- ADMIN ----------
+@app.get("/admin/users", response_model=list[UserOut])
+def admin_list_users(db: Session = Depends(get_db), admin=Depends(require_role("admin"))):
+    return crud.list_users(db)
+
+
+@app.put("/admin/users/{user_id}/role", response_model=UserOut)
+def admin_set_role(
+    user_id: UUID,
+    payload: RoleUpdateIn,
+    db: Session = Depends(get_db),
+    admin=Depends(require_role("admin")),
+):
+    if payload.role not in {"customer", "mechanic", "admin"}:
+        raise HTTPException(status_code=400, detail="Invalid role")
+
+    if str(admin.id) == str(user_id) and payload.role != "admin":
+        raise HTTPException(status_code=400, detail="Cannot change your own admin role")
+
+    updated = crud.update_user_role(db, user_id, payload.role)
+    if not updated:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated
+
+
+@app.delete("/admin/users/{user_id}")
+def admin_delete_user(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+    admin=Depends(require_role("admin")),
+):
+    if str(admin.id) == str(user_id):
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+
+    ok = crud.delete_user(db, user_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="User not found")
+
     delete(CACHE_KEY_ALL_ORDERS)
+    return {"ok": True}
 
+
+# ---------- ORDERS ----------
+@app.post("/orders", response_model=OrderOut)
+def create_order(payload: OrderCreate, db: Session = Depends(get_db), user=Depends(require_role("customer"))):
+    created = crud.create_order(db, user.id, payload.customer_name, payload.vehicle, payload.service_date)
+    delete(CACHE_KEY_ALL_ORDERS)
     return created
 
 
@@ -66,34 +148,34 @@ def list_orders(
     status: str | None = Query(default=None),
     service_date: date | None = Query(default=None),
     db: Session = Depends(get_db),
+    user=Depends(get_current_user),
 ):
-    # Cache only the "no filters" query (most common / safest)
-    if status is None and service_date is None:
+    scope_customer_id = user.id if user.role == "customer" else None
+
+    if status is None and service_date is None and scope_customer_id is None:
         cached = get_json(CACHE_KEY_ALL_ORDERS)
         if cached is not None:
-            # cached is a list of dicts matching OrderOut schema
             return cached
 
-        result = crud.get_orders(db, status=None, service_date=None)
-
-        # Convert SQLAlchemy objects -> JSON-serializable dicts
+        result = crud.get_orders(db, customer_id=None)
         payload = [OrderOut.model_validate(o).model_dump() for o in result]
         set_json(CACHE_KEY_ALL_ORDERS, payload, ttl=CACHE_TTL_SECONDS)
-
-        # Return the cached payload (same as payload)
         return payload
 
-    # If filters are used, do not cache (keeps it simple and correct)
-    return crud.get_orders(db, status=status, service_date=service_date)
+    return crud.get_orders(db, status=status, service_date=service_date, customer_id=scope_customer_id)
 
 
 @app.put("/orders/{order_id}/status", response_model=OrderOut)
-def update_status(order_id: UUID, status: str, db: Session = Depends(get_db)):
+def update_status(
+    order_id: UUID,
+    status: str,
+    db: Session = Depends(get_db),
+    user=Depends(require_role("mechanic", "admin")),
+):
     updated = crud.update_order_status(db, order_id, status)
     if not updated:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    # Phase 2: publish event to RabbitMQ
     publish_status_event(
         {
             "event": "order_status_changed",
@@ -105,19 +187,27 @@ def update_status(order_id: UUID, status: str, db: Session = Depends(get_db)):
         }
     )
 
-    # Phase 2 cache invalidation
     delete(CACHE_KEY_ALL_ORDERS)
-
     return updated
 
 
 @app.delete("/orders/{order_id}", response_model=OrderOut)
-def cancel_order(order_id: UUID, db: Session = Depends(get_db)):
+def cancel_order(
+    order_id: UUID,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    order = crud.get_order_by_id(db, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if user.role == "customer" and str(order.customer_id) != str(user.id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
     cancelled = crud.cancel_order(db, order_id)
     if not cancelled:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    # Optional: also publish cancellation as a status change (still "status changed")
     publish_status_event(
         {
             "event": "order_status_changed",
@@ -129,7 +219,5 @@ def cancel_order(order_id: UUID, db: Session = Depends(get_db)):
         }
     )
 
-    # Phase 2 cache invalidation
     delete(CACHE_KEY_ALL_ORDERS)
-
     return cancelled

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Autoservis – Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      align-items: center;
+      justify-content: center;
+      background: #fafafa;
+    }
+    .box {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 24px 28px;
+      text-align: center;
+      max-width: 420px;
+    }
+    .spinner {
+      margin: 16px auto;
+      width: 36px;
+      height: 36px;
+      border: 4px solid #ddd;
+      border-top-color: #222;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .small {
+      color: #666;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    button {
+      margin-top: 16px;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Autoservis</h2>
+    <p>Provjera prijave i uloge…</p>
+    <div class="spinner"></div>
+    <div id="info" class="small"></div>
+
+    <button onclick="logout()">Odjava</button>
+  </div>
+
+  <script>
+    function logout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      window.location.href = "/index.html";
+    }
+
+    function redirectByRole(role) {
+      if (role === "customer") {
+        window.location.href = "/customer.html";
+      } else if (role === "mechanic") {
+        window.location.href = "/mechanic.html";
+      } else if (role === "admin") {
+        window.location.href = "/admin.html";
+      } else {
+        document.getElementById("info").textContent =
+          "Nepoznata uloga: " + role;
+      }
+    }
+
+    (function init() {
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+
+      if (!token || !role) {
+        window.location.href = "/index.html";
+        return;
+      }
+
+      document.getElementById("info").textContent =
+        "Uloga: " + role + " – preusmjeravam…";
+
+      setTimeout(() => redirectByRole(role), 600);
+    })();
+  </script>
+
+</body>
+</html>

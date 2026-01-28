@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Autoservis – Korisnik</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1000px; }
+    header { display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; }
+    .pill { font-size: 12px; padding: 6px 10px; border-radius: 999px; background:#f2f2f2; }
+    .row { display:flex; gap: 18px; flex-wrap: wrap; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; flex: 1; min-width: 320px; }
+    label { display:block; margin: 10px 0 6px; font-weight: 600; }
+    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+    button { padding: 10px 12px; border: 0; border-radius: 6px; cursor: pointer; }
+    button.primary { background: #222; color: #fff; }
+    button.danger { background: #b00020; color: #fff; }
+    button.secondary { background: #eee; }
+    table { border-collapse: collapse; width: 100%; margin-top: 14px; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+    th { background: #eee; }
+    .msg { margin-top: 10px; white-space: pre-wrap; }
+    .ok { color: #0a7a0a; }
+    .err { color: #b00020; }
+    .muted { color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Korisnički panel</h1>
+    <div class="muted">Customer: kreira, pregledava i otkazuje svoje narudžbe.</div>
+  </div>
+  <div>
+    <span class="pill" id="whoami">...</span>
+    <button class="secondary" onclick="logout()">Odjava</button>
+  </div>
+</header>
+
+<div class="row">
+  <div class="card">
+    <h2>Nova narudžba</h2>
+
+    <label for="customer_name">Ime klijenta</label>
+    <input id="customer_name" placeholder="npr. Matija Tomc" />
+
+    <label for="vehicle">Vozilo</label>
+    <input id="vehicle" placeholder="npr. Audi A3" />
+
+    <label for="service_date">Datum servisa</label>
+    <input id="service_date" type="date" />
+
+    <button class="primary" onclick="createOrder()">Dodaj narudžbu</button>
+
+    <div id="createMsg" class="msg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Moje narudžbe</h2>
+    <div class="muted">Backend automatski vraća samo tvoje narudžbe (prema tokenu).</div>
+
+    <button class="secondary" onclick="loadOrders()">Osvježi</button>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Vozilo</th>
+          <th>Datum</th>
+          <th>Status</th>
+          <th>Akcije</th>
+        </tr>
+      </thead>
+      <tbody id="ordersTbody">
+        <tr><td colspan="5" class="muted">Učitavam...</td></tr>
+      </tbody>
+    </table>
+
+    <div id="ordersMsg" class="msg"></div>
+  </div>
+</div>
+
+<script>
+  const API = "/api";
+
+  function token() {
+    return localStorage.getItem("token");
+  }
+  function role() {
+    return localStorage.getItem("role");
+  }
+  function authHeaders() {
+    return {
+      "Authorization": "Bearer " + token(),
+      "Content-Type": "application/json"
+    };
+  }
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    window.location.href = "/index.html";
+  }
+  function setMsg(el, text, ok=false) {
+    el.textContent = text;
+    el.className = "msg " + (ok ? "ok" : "err");
+  }
+
+  async function loadMe() {
+    const pill = document.getElementById("whoami");
+    try {
+      const res = await fetch(`${API}/auth/me`, { headers: { "Authorization": "Bearer " + token() }});
+      const data = await res.json();
+      if (!res.ok) {
+        pill.textContent = "Nevažeća prijava";
+        return;
+      }
+      pill.textContent = `${data.email} (${data.role})`;
+    } catch (e) {
+      pill.textContent = "Greška";
+    }
+  }
+
+  async function loadOrders() {
+    const tbody = document.getElementById("ordersTbody");
+    const msgEl = document.getElementById("ordersMsg");
+    msgEl.textContent = "";
+
+    try {
+      const res = await fetch(`${API}/orders`, { headers: { "Authorization": "Bearer " + token() }});
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Ne mogu dohvatiti narudžbe.");
+        return;
+      }
+
+      if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="muted">Nema narudžbi.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(o => `
+        <tr>
+          <td style="font-size:12px">${o.id}</td>
+          <td>${escapeHtml(o.vehicle)}</td>
+          <td>${escapeHtml(o.service_date)}</td>
+          <td>${escapeHtml(o.status)}</td>
+          <td>
+            <button class="danger" onclick="cancelOrder('${o.id}', '${o.status}')">Otkazi</button>
+          </td>
+        </tr>
+      `).join("");
+
+    } catch (e) {
+      setMsg(msgEl, "Greška: " + e);
+    }
+  }
+
+  async function createOrder() {
+    const msgEl = document.getElementById("createMsg");
+    msgEl.textContent = "";
+
+    const customer_name = document.getElementById("customer_name").value.trim();
+    const vehicle = document.getElementById("vehicle").value.trim();
+    const service_date = document.getElementById("service_date").value;
+
+    if (!customer_name || !vehicle || !service_date) {
+      setMsg(msgEl, "Popuni sva polja.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/orders`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ customer_name, vehicle, service_date })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješno kreiranje narudžbe.");
+        return;
+      }
+
+      setMsg(msgEl, "Narudžba kreirana!", true);
+
+      document.getElementById("customer_name").value = "";
+      document.getElementById("vehicle").value = "";
+      document.getElementById("service_date").value = "";
+
+      loadOrders();
+    } catch (e) {
+      setMsg(msgEl, "Greška: " + e);
+    }
+  }
+
+  async function cancelOrder(id, status) {
+    const msgEl = document.getElementById("ordersMsg");
+    msgEl.textContent = "";
+
+    if (status === "cancelled") {
+      setMsg(msgEl, "Ova narudžba je već otkazana.");
+      return;
+    }
+
+    if (!confirm("Sigurno želiš otkazati ovu narudžbu?")) return;
+
+    try {
+      const res = await fetch(`${API}/orders/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token() }
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješno otkazivanje.");
+        return;
+      }
+
+      setMsg(msgEl, "Narudžba otkazana.", true);
+      loadOrders();
+    } catch (e) {
+      setMsg(msgEl, "Greška: " + e);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  (function init() {
+    const t = token();
+    const r = role();
+
+    if (!t || !r) {
+      window.location.href = "/index.html";
+      return;
+    }
+    if (r !== "customer") {
+      window.location.href = "/dashboard.html";
+      return;
+    }
+
+    loadMe();
+    loadOrders();
+  })();
+</script>
+
+</body>
+</html>
