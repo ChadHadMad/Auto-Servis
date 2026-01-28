@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   nginx:
     image: nginx:alpine
@@ -6,13 +8,10 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./frontend:/usr/share/nginx/html
-
     depends_on:
       - haproxy
     networks:
-      autoservis-net:
-        aliases:
-          - nginx
+      - autoservis-net
 
   haproxy:
     image: haproxy:2.9
@@ -22,28 +21,21 @@ services:
       - api1
       - api2
     networks:
-      autoservis-net:
-        aliases:
-          - haproxy
+      - autoservis-net
 
   api1:
     build: ./services/api
     environment:
-      API_NAME: ap1
-      RABBIT_HOST: rabbitmq
-      RABBIT_QUEUE: order_status_events
+      API_NAME: api1
     networks:
       - autoservis-net
 
   api2:
     build: ./services/api
     environment:
-      API_NAME: ap2
-      RABBIT_HOST: rabbitmq
-      RABBIT_QUEUE: order_status_events
+      API_NAME: api2
     networks:
       - autoservis-net
-
   worker:
     build: ./services/api
     command: ["python", "-u", "worker.py"]
@@ -64,8 +56,6 @@ services:
       - ./services/postfix-relay/resolv.conf:/etc/resolv.conf:ro
     networks:
       - autoservis-net
-
-
   db:
     image: postgres:15
     environment:
@@ -84,6 +74,80 @@ services:
     image: memcached:alpine
     networks:
       - autoservis-net
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - autoservis-net
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - autoservis-net
+
+  airflow-webserver:
+    image: apache/airflow:2.7.1
+    restart: always
+    ports:
+      - "8081:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:pass@db:5432/servis
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW_UID: 50000
+      AIRFLOW_GID: 50000
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/data:/opt/airflow
+    command: webserver
+    networks:
+      - autoservis-net
+
+  airflow-scheduler:
+    image: apache/airflow:2.7.1
+    restart: always
+    depends_on:
+      - airflow-webserver
+      - db
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:pass@db:5432/servis
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW_UID: 50000
+      AIRFLOW_GID: 50000
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/data:/opt/airflow
+    command: scheduler
+    networks:
+      - autoservis-net
+
+  airflow-exporter:
+    build: ./airflow-exporter
+    environment:
+      AIRFLOW_BASE_URL: http://airflow-webserver:8080
+      AIRFLOW_USERNAME: admin
+      AIRFLOW_PASSWORD: admin
+    depends_on:
+      - airflow-webserver
+    networks:
+      - autoservis-net
+    ports:
+      - "9112:9112"
+
+
 
 networks:
   autoservis-net:

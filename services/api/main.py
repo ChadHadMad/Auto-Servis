@@ -2,6 +2,7 @@ import os
 import time
 from datetime import date
 from uuid import UUID
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from fastapi import FastAPI, Depends, HTTPException, Query
 from sqlalchemy import text
@@ -20,12 +21,15 @@ from cache import get_json, set_json, delete
 
 app = FastAPI()
 
+Instrumentator().instrument(app).expose(app)
+
 CACHE_KEY_ALL_ORDERS = "orders:all"
 CACHE_TTL_SECONDS = 30
 
 
 @app.on_event("startup")
 def on_startup():
+
     # wait for DB to accept connections (prevents crash on container start)
     for _ in range(30):
         try:

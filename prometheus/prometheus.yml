@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Ostali scrape_configs...
+
+  - job_name: 'airflow'
+    static_configs:
+      - targets: ['airflow-exporter:9112']
