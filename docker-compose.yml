@@ -26,14 +26,22 @@ services:
   api1:
     build: ./services/api
     environment:
-      API_NAME: api1
+      API_NAME: ap1
+      RABBIT_HOST: rabbitmq
+      RABBIT_QUEUE: order_status_events
+      SEED_ADMIN_EMAIL: admin@autoservis.com
+      SEED_ADMIN_PASSWORD: admin123
     networks:
       - autoservis-net
 
   api2:
     build: ./services/api
     environment:
-      API_NAME: api2
+      API_NAME: ap2
+      RABBIT_HOST: rabbitmq
+      RABBIT_QUEUE: order_status_events
+      SEED_ADMIN_EMAIL: admin@autoservis.com
+      SEED_ADMIN_PASSWORD: admin123
     networks:
       - autoservis-net
   worker:

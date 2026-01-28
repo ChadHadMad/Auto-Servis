@@ -6,3 +6,8 @@ pydantic
 pika
 pymemcache
 prometheus-fastapi-instrumentator
+python-jose[cryptography]
+passlib
+bcrypt==4.0.1
+python-multipart
+email-validator

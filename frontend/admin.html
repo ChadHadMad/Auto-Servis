@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Autoservis – Admin</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1200px; }
+    header { display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; }
+    .pill { font-size: 12px; padding: 6px 10px; border-radius: 999px; background:#f2f2f2; }
+    .grid { display:grid; grid-template-columns: 1fr; gap: 18px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; }
+    button { padding: 8px 10px; border: 0; border-radius: 6px; cursor: pointer; }
+    button.secondary { background:#eee; }
+    button.primary { background:#222; color:#fff; }
+    button.danger { background:#b00020; color:#fff; }
+    select, input { padding: 6px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 14px; }
+    th, td { border: 1px solid #ccc; padding: 8px; vertical-align: top; }
+    th { background: #eee; }
+    .row { display:flex; gap: 10px; align-items:center; flex-wrap: wrap; }
+    .msg { margin-top: 10px; white-space: pre-wrap; }
+    .ok { color: #0a7a0a; }
+    .err { color: #b00020; }
+    .muted { color:#666; font-size: 12px; }
+    .split { display:grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 980px) { .split { grid-template-columns: 1fr; } }
+    .status-created { color:#444; }
+    .status-in_progress { color:#0b5ed7; font-weight:600; }
+    .status-finished { color:#0a7a0a; font-weight:600; }
+    .status-cancelled { color:#b00020; font-weight:600; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Admin panel</h1>
+    <div class="muted">Admin: upravlja korisnicima (role/delete) i vidi sve narudžbe.</div>
+  </div>
+  <div class="row">
+    <span class="pill" id="whoami">...</span>
+    <button class="secondary" onclick="logout()">Odjava</button>
+  </div>
+</header>
+
+<div class="grid">
+
+  <div class="card split">
+    <!-- USERS -->
+    <div>
+      <h2>Korisnici</h2>
+      <div class="row">
+        <button class="secondary" onclick="loadUsers()">Osvježi korisnike</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Akcije</th>
+          </tr>
+        </thead>
+        <tbody id="usersTbody">
+          <tr><td colspan="3" class="muted">Učitavam...</td></tr>
+        </tbody>
+      </table>
+
+      <div id="usersMsg" class="msg"></div>
+      <div class="muted">Napomena: ne možeš obrisati sam sebe (backend to blokira).</div>
+    </div>
+
+    <!-- ORDERS -->
+    <div>
+      <h2>Narudžbe</h2>
+      <div class="row">
+        <button class="secondary" onclick="loadOrders()">Osvježi narudžbe</button>
+        <span class="muted">Promjena statusa šalje RabbitMQ event + mail (finished/cancelled).</span>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Klijent</th>
+            <th>Vozilo</th>
+            <th>Datum</th>
+            <th>Status</th>
+            <th>Promjena</th>
+            <th>Brisanje</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTbody">
+          <tr><td colspan="7" class="muted">Učitavam...</td></tr>
+        </tbody>
+      </table>
+
+      <div id="ordersMsg" class="msg"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const API = "/api";
+
+  function token() { return localStorage.getItem("token"); }
+  function role() { return localStorage.getItem("role"); }
+
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    window.location.href = "/index.html";
+  }
+
+  function setMsg(el, text, ok=false) {
+    el.textContent = text;
+    el.className = "msg " + (ok ? "ok" : "err");
+  }
+
+  function authHeaders() {
+    return { "Authorization": "Bearer " + token(), "Content-Type": "application/json" };
+  }
+
+  async function loadMe() {
+    const pill = document.getElementById("whoami");
+    try {
+      const res = await fetch(`${API}/auth/me`, { headers: { "Authorization": "Bearer " + token() }});
+      const data = await res.json();
+      if (!res.ok) { pill.textContent = "Nevažeća prijava"; return; }
+      pill.textContent = `${data.email} (${data.role})`;
+    } catch { pill.textContent = "Greška"; }
+  }
+
+  // ---------- USERS ----------
+  async function loadUsers() {
+    const tbody = document.getElementById("usersTbody");
+    const msgEl = document.getElementById("usersMsg");
+    msgEl.textContent = "";
+
+    try {
+      const res = await fetch(`${API}/admin/users`, { headers: { "Authorization": "Bearer " + token() }});
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Ne mogu dohvatiti korisnike.");
+        return;
+      }
+
+      if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="3" class="muted">Nema korisnika.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(u => `
+        <tr>
+          <td>${escapeHtml(u.email)}<div class="muted" style="margin-top:4px;font-size:11px">${u.id}</div></td>
+          <td>
+            <select id="role_${u.id}">
+              ${roleOptions(u.role)}
+            </select>
+          </td>
+          <td class="row">
+            <button class="primary" onclick="saveRole('${u.id}')">Spremi</button>
+            <button class="danger" onclick="deleteUser('${u.id}', '${escapeJs(u.email)}')">Obriši</button>
+          </td>
+        </tr>
+      `).join("");
+
+    } catch (e) {
+      setMsg(msgEl, "Greška: " + e);
+    }
+  }
+
+  function roleOptions(current) {
+    const roles = ["customer", "mechanic", "admin"];
+    return roles.map(r =>
+      `<option value="${r}" ${r === current ? "selected" : ""}>${r}</option>`
+    ).join("");
+  }
+
+  async function saveRole(userId) {
+    const msgEl = document.getElementById("usersMsg");
+    msgEl.textContent = "";
+    const newRole = document.getElementById(`role_${userId}`).value;
+
+    try {
+      const res = await fetch(`${API}/admin/users/${userId}/role`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ role: newRole })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješna promjena role.");
+        return;
+      }
+
+      setMsg(msgEl, `Role promijenjena: ${data.email} -> ${data.role}`, true);
+      loadUsers();
+    } catch (e) {
+      setMsg(msgEl, "Greška: " + e);
+    }
+  }
+
+  async function deleteUser(userId, email) {
+    const msgEl = document.getElementById("usersMsg");
+    msgEl.textContent = "";
+
+    if (!confirm(`Sigurno želiš obrisati korisnika?\n${email}`)) return;
+
+    try {
+      const res = await fetch(`${API}/admin/users/${userId}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token() }
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješno brisanje korisnika.");
+        return;
+      }
+
+      setMsg(msgEl, "Korisnik obrisan.", true);
+      loadUsers();
+      loadOrders();
+    } catch (e) {
+      setMsg(msgEl, "Greška: " + e);
+    }
+  }
+
+  // ---------- ORDERS ----------
+  async function loadOrders() {
+    const tbody = document.getElementById("ordersTbody");
+    const msgEl = document.getElementById("ordersMsg");
+    msgEl.textContent = "";
+
+    try {
+      const res = await fetch(`${API}/orders`, { headers: { "Authorization": "Bearer " + token() }});
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Ne mogu dohvatiti narudžbe.");
+        return;
+      }
+
+      if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="muted">Nema narudžbi.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(o => `
+        <tr>
+          <td style="font-size:12px">${o.id}<div class="muted" style="font-size:11px;margin-top:4px">cust_id: ${o.customer_id}</div></td>
+          <td>${escapeHtml(o.customer_name)}</td>
+          <td>${escapeHtml(o.vehicle)}</td>
+          <td>${escapeHtml(o.service_date)}</td>
+          <td class="status-${o.status}">${escapeHtml(o.status)}</td>
+          <td>
+            <select onchange="updateStatus('${o.id}', this.value)">
+              ${statusOptions(o.status)}
+            </select>
+          </td>
+          <td>
+            <button class="danger" onclick="deleteOrder('${o.id}', '${o.status}')">Obriši</button>
+          </td>
+        </tr>
+      `).join("");
+
+    } catch (e) {
+      setMsg(msgEl, "Greška: " + e);
+    }
+  }
+
+  function statusOptions(current) {
+    const all = ["created", "in_progress", "finished", "cancelled"];
+    return all.map(s =>
+      `<option value="${s}" ${s === current ? "selected" : ""}>${s}</option>`
+    ).join("");
+  }
+
+  async function updateStatus(orderId, newStatus) {
+    const msgEl = document.getElementById("ordersMsg");
+    msgEl.textContent = "";
+
+    try {
+      const res = await fetch(`${API}/orders/${orderId}/status?status=${newStatus}`, {
+        method: "PUT",
+        headers: { "Authorization": "Bearer " + token() }
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješna promjena statusa.");
+        return;
+      }
+
+      setMsg(msgEl, `Status promijenjen u "${newStatus}".`, true);
+      loadOrders();
+    } catch (e) {
+      setMsg(msgEl, "Greška: " + e);
+    }
+  }
+
+  async function deleteOrder(orderId, status)                {
+    const msgEl = document.getElementById("ordersMsg");
+    msgEl.textContent = "";
+
+    if (!confirm(`Sigurno obrisati narudžbu?\n${orderId}`)) return;
+
+    try {
+      const res = await fetch(`${API}/orders/${orderId}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token() }
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješno brisanje/otkazivanje.");
+        return;
+      }
+
+      setMsg(msgEl, `Narudžba je otkazana (status=cancelled).`, true);
+      loadOrders();
+    } catch (e) {
+      setMsg(msgEl, "Greška: " + e);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function escapeJs(s) {
+    return String(s).replaceAll("'", "\\'");
+  }
+
+  (function init() {
+    const t = token();
+    const r = role();
+
+    if (!t || !r) {
+      window.location.href = "/index.html";
+      return;
+    }
+    if (r !== "admin") {
+      window.location.href = "/dashboard.html";
+      return;
+    }
+
+    loadMe();
+    loadUsers();
+    loadOrders();
+  })();
+</script>
+
+</body>
+</html>

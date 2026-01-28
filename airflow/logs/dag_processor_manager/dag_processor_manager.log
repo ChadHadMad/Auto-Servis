@@ -1042,3 +1042,86 @@ File Path                            PID    Runtime      # DAGs    # Errors  Las
 /opt/airflow/dags/monthly_report.py                           1           0  0.26s           2026-01-28T22:22:22
 ================================================================================
 [2026-01-28T22:23:00.853+0000] {manager.py:469} INFO - Exiting gracefully upon receiving signal 15
+[2026-01-28T23:19:37.696+0000] {manager.py:487} INFO - Processing files using up to 2 processes at a time 
+[2026-01-28T23:19:37.697+0000] {manager.py:488} INFO - Process each file at most once every 30 seconds
+[2026-01-28T23:19:37.697+0000] {manager.py:489} INFO - Checking for new files in /opt/airflow/dags every 300 seconds
+[2026-01-28T23:19:37.697+0000] {manager.py:759} INFO - Searching for files in /opt/airflow/dags
+[2026-01-28T23:19:37.697+0000] {manager.py:762} INFO - There are 1 files in /opt/airflow/dags
+[2026-01-28T23:19:37.736+0000] {manager.py:893} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                              PID  Runtime      # DAGs    # Errors  Last Runtime    Last Run
+-----------------------------------  -----  ---------  --------  ----------  --------------  ----------
+/opt/airflow/dags/monthly_report.py   1505  0.01s             0           0
+================================================================================
+[2026-01-28T23:19:51.709+0000] {manager.py:469} INFO - Exiting gracefully upon receiving signal 15
+[2026-01-28T23:19:55.895+0000] {manager.py:487} INFO - Processing files using up to 2 processes at a time 
+[2026-01-28T23:19:55.895+0000] {manager.py:488} INFO - Process each file at most once every 30 seconds
+[2026-01-28T23:19:55.895+0000] {manager.py:489} INFO - Checking for new files in /opt/airflow/dags every 300 seconds
+[2026-01-28T23:19:55.895+0000] {manager.py:759} INFO - Searching for files in /opt/airflow/dags
+[2026-01-28T23:19:55.896+0000] {manager.py:762} INFO - There are 1 files in /opt/airflow/dags
+[2026-01-28T23:19:55.949+0000] {manager.py:893} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                              PID  Runtime      # DAGs    # Errors  Last Runtime    Last Run
+-----------------------------------  -----  ---------  --------  ----------  --------------  ----------
+/opt/airflow/dags/monthly_report.py    170  0.03s             0           0
+================================================================================
+[2026-01-28T23:20:26.088+0000] {manager.py:893} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                            PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run
+-----------------------------------  -----  ---------  --------  ----------  --------------  -------------------
+/opt/airflow/dags/monthly_report.py                           1           0  0.29s           2026-01-28T23:19:56
+================================================================================
+[2026-01-28T23:20:56.488+0000] {manager.py:893} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                            PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run
+-----------------------------------  -----  ---------  --------  ----------  --------------  -------------------
+/opt/airflow/dags/monthly_report.py                           1           0  0.28s           2026-01-28T23:20:26
+================================================================================
+[2026-01-28T23:21:26.824+0000] {manager.py:893} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                            PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run
+-----------------------------------  -----  ---------  --------  ----------  --------------  -------------------
+/opt/airflow/dags/monthly_report.py                           1           0  0.28s           2026-01-28T23:20:56
+================================================================================
+[2026-01-28T23:21:57.256+0000] {manager.py:893} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                            PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run
+-----------------------------------  -----  ---------  --------  ----------  --------------  -------------------
+/opt/airflow/dags/monthly_report.py                           1           0  0.28s           2026-01-28T23:21:27
+================================================================================
+[2026-01-28T23:22:27.589+0000] {manager.py:893} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                            PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run
+-----------------------------------  -----  ---------  --------  ----------  --------------  -------------------
+/opt/airflow/dags/monthly_report.py                           1           0  0.31s           2026-01-28T23:21:57
+================================================================================
+[2026-01-28T23:22:57.984+0000] {manager.py:893} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                            PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run
+-----------------------------------  -----  ---------  --------  ----------  --------------  -------------------
+/opt/airflow/dags/monthly_report.py                           1           0  0.28s           2026-01-28T23:22:28
+================================================================================
+[2026-01-28T23:23:28.347+0000] {manager.py:893} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                            PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run
+-----------------------------------  -----  ---------  --------  ----------  --------------  -------------------
+/opt/airflow/dags/monthly_report.py                           1           0  0.29s           2026-01-28T23:22:58
+================================================================================
