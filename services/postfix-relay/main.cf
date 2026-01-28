@@ -1,12 +1,10 @@
-# Osnovne postavke
+compatibility_level = 3.6
 
 myhostname = relay.autoservis.local
 mydomain = autoservis.local
 myorigin = $mydomain
 
-# Dozvoli pristup samo iz Docker mreže (prilagodi subnet tvoje mreže)
 mynetworks = 127.0.0.0/8, 172.19.0.0/16
-
 
 relayhost = [smtp.gmail.com]:587
 
@@ -16,9 +14,8 @@ smtp_sasl_security_options = noanonymous
 smtp_use_tls = yes
 smtp_tls_security_level = encrypt
 smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
-maillog_file = /dev/stdout
-smtpd_relay_restrictions = permit_mynetworks, reject_unauth_destination
-smtpd_recipient_restrictions = permit_mynetworks, reject_unauth_destination
-# Ostale postavke
+
+smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination
+
 inet_interfaces = all
 inet_protocols = ipv4

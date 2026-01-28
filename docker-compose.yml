@@ -51,7 +51,7 @@ services:
       RABBIT_HOST: rabbitmq
       RABBIT_QUEUE: order_status_events
       BOSS_EMAIL: enigmas.smm@gmail.com
-      EMAIL_USER: smiklosevic.smm@gmail.com
+      EMAIL_FROM: smiklosevic.smm@gmail.com
       EMAIL_PASS: luhnaylpbgiwfxvk
     depends_on:
       - rabbitmq
@@ -60,8 +60,12 @@ services:
 
   postfix-relay:
     build: ./services/postfix-relay
+    environment:
+      EMAIL_USER: smiklosevic.smm@gmail.com
+      EMAIL_PASS: luhnaylpbgiwfxvk
     networks:
       - autoservis-net
+
 
   db:
     image: postgres:15

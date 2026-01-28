@@ -12,7 +12,7 @@ RABBIT_QUEUE = os.getenv("RABBIT_QUEUE", "order_status_events")
 
 SMTP_HOST = os.getenv("SMTP_HOST", "postfix-relay")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 25))
-BOSS_EMAIL = os.getenv("BOSS_EMAIL", "sef@autoservis.hr")
+BOSS_EMAIL = os.getenv("BOSS_EMAIL", "enigmas.smm@gmail.com")
 
 
 def send_email_to_boss(event: dict):
