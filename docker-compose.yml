@@ -44,6 +44,7 @@ services:
       SEED_ADMIN_PASSWORD: admin123
     networks:
       - autoservis-net
+
   worker:
     build: ./services/api
     command: ["python", "-u", "worker.py"]
@@ -64,6 +65,7 @@ services:
       - ./services/postfix-relay/resolv.conf:/etc/resolv.conf:ro
     networks:
       - autoservis-net
+
   db:
     image: postgres:15
     environment:
@@ -101,26 +103,26 @@ services:
     networks:
       - autoservis-net
 
-    airflow-webserver:
-      image: apache/airflow:2.7.1
-      restart: always
-      ports:
-        - "8081:8080"
-      environment:
-        AIRFLOW__CORE__EXECUTOR: LocalExecutor
-        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:pass@db:5432/servis
-        AIRFLOW__CORE__LOAD_EXAMPLES: "False"
-        AIRFLOW_UID: 50000
-        AIRFLOW_GID: 50000
-      volumes:
-        - ./airflow/dags:/opt/airflow/dags
-        - ./airflow/logs:/opt/airflow/logs
-        - ./airflow/plugins:/opt/airflow/plugins
-        - ./airflow/data:/opt/airflow/data
-        - ./airflow/entrypoint.sh:/entrypoint.sh
-      command: ["bash", "/entrypoint.sh", "webserver"]
-      networks:
-        - autoservis-net
+  airflow-webserver:
+    image: apache/airflow:2.7.1
+    restart: always
+    ports:
+      - "8081:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:pass@db:5432/servis
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW_UID: 50000
+      AIRFLOW_GID: 50000
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/data:/opt/airflow/data
+      - ./airflow/entrypoint.sh:/entrypoint.sh
+    command: ["bash", "/entrypoint.sh", "webserver"]
+    networks:
+      - autoservis-net
 
   airflow-scheduler:
     image: apache/airflow:2.7.1
@@ -144,7 +146,6 @@ services:
     networks:
       - autoservis-net
 
-
   airflow-exporter:
     build: ./airflow-exporter
     environment:
@@ -157,8 +158,6 @@ services:
       - autoservis-net
     ports:
       - "9112:9112"
-
-
 
 networks:
   autoservis-net:
