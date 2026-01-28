@@ -21,6 +21,8 @@ def send_email_to_boss(event: dict):
 Promjena statusa narudžbe:
 
 ID narudžbe: {event.get('order_id')}
+Vlasnik: {event.get('customer_name')}
+Vozilo: {event.get('vehicle')}
 Novi status: {event.get('new_status')}
 Datum servisa: {event.get('service_date')}
 
@@ -34,9 +36,15 @@ Datum servisa: {event.get('service_date')}
     msg.set_content(body)
 
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as smtp:
-            smtp.send_message(msg)
-        print(f"[worker] Mail poslan za order_id={event.get('order_id')}")
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as smtp:
+            smtp.set_debuglevel(1)  # privremeno za debug
+            refused = smtp.send_message(msg)
+
+        if refused:
+            print(f"[worker] Mail odbijen za: {refused}", flush=True)
+        else:
+            print(f"[worker] Mail predan postfixu (OK) za order_id={event.get('order_id')}", flush=True)
+
     except Exception as e:
         print(f"[worker] SMTP greška: {e}")
 

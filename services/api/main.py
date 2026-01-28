@@ -100,6 +100,8 @@ def update_status(order_id: UUID, status: str, db: Session = Depends(get_db)):
             "order_id": str(updated.id),
             "new_status": updated.status,
             "service_date": str(updated.service_date),
+            "customer_name": updated.customer_name,
+            "vehicle": updated.vehicle,
         }
     )
 
@@ -122,6 +124,8 @@ def cancel_order(order_id: UUID, db: Session = Depends(get_db)):
             "order_id": str(cancelled.id),
             "new_status": cancelled.status,
             "service_date": str(cancelled.service_date),
+            "customer_name": cancelled.customer_name,
+            "vehicle": cancelled.vehicle,
         }
     )
 

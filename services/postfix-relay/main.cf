@@ -4,7 +4,7 @@ myhostname = relay.autoservis.local
 mydomain = autoservis.local
 myorigin = $mydomain
 
-mynetworks = 127.0.0.0/8, 172.19.0.0/16
+mynetworks = 127.0.0.0/8, 172.18.0.0/16, 172.19.0.0/16
 
 relayhost = [smtp.gmail.com]:587
 
@@ -14,6 +14,10 @@ smtp_sasl_security_options = noanonymous
 smtp_use_tls = yes
 smtp_tls_security_level = encrypt
 smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+
+smtp_host_lookup = dns
+smtp_dns_support_level = enabled
+
 
 smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination
 
