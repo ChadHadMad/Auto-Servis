@@ -1218,3 +1218,17 @@
 [2026-01-28T23:41:39.466+0000] {logging_mixin.py:151} INFO - [2026-01-28T23:41:39.466+0000] {dag.py:2915} INFO - Sync 1 DAGs
 [2026-01-28T23:41:39.484+0000] {logging_mixin.py:151} INFO - [2026-01-28T23:41:39.484+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
 [2026-01-28T23:41:39.497+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.227 seconds
+[2026-01-28T23:56:41.317+0000] {processor.py:157} INFO - Started process (PID=200) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-28T23:56:41.323+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-28T23:56:41.325+0000] {logging_mixin.py:151} INFO - [2026-01-28T23:56:41.324+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-28T23:56:41.610+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-28T23:56:41.629+0000] {logging_mixin.py:151} INFO - [2026-01-28T23:56:41.629+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-28T23:56:41.645+0000] {logging_mixin.py:151} INFO - [2026-01-28T23:56:41.645+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-28T23:56:41.655+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.342 seconds
+[2026-01-28T23:57:53.712+0000] {processor.py:157} INFO - Started process (PID=199) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-28T23:57:53.714+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-28T23:57:53.714+0000] {logging_mixin.py:151} INFO - [2026-01-28T23:57:53.714+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-28T23:57:53.978+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-28T23:57:53.995+0000] {logging_mixin.py:151} INFO - [2026-01-28T23:57:53.994+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-28T23:57:54.008+0000] {logging_mixin.py:151} INFO - [2026-01-28T23:57:54.008+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-28T23:57:54.021+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.311 seconds
