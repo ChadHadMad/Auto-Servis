@@ -11,7 +11,7 @@
     .row { display:flex; gap: 18px; flex-wrap: wrap; }
     .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; flex: 1; min-width: 320px; }
     label { display:block; margin: 10px 0 6px; font-weight: 600; }
-    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
     button { padding: 10px 12px; border: 0; border-radius: 6px; cursor: pointer; }
     button.primary { background: #222; color: #fff; }
     button.danger { background: #b00020; color: #fff; }
@@ -43,8 +43,9 @@
   <div class="card">
     <h2>Nova narudžba</h2>
 
-    <label for="vehicle">Vozilo</label>
-    <input id="vehicle" placeholder="npr. Audi A3" />
+    <label for="vehicle_id">Vozilo</label>
+    <select id="vehicle_id"></select>
+    <div class="muted" style="margin-top:6px;">Nemaš vozilo? Dodaj ga ispod.</div>
 
     <label for="service_date">Datum servisa</label>
     <input id="service_date" type="date" />
@@ -52,10 +53,27 @@
     <label for="notes">Opis problema (bilješke)</label>
     <textarea id="notes" rows="4" placeholder="Npr. čuje se zvuk pri kočenju, lampica motora svijetli..."></textarea>
 
-
     <button class="primary" onclick="createOrder()">Dodaj narudžbu</button>
-
     <div id="createMsg" class="msg"></div>
+
+    <div style="margin-top:14px; border-top:1px solid #eee; padding-top:10px;">
+      <h3 style="margin:0 0 6px 0; font-size:16px;">Dodaj vozilo</h3>
+
+      <label for="v_make">Marka</label>
+      <input id="v_make" placeholder="npr. Audi" />
+
+      <label for="v_model">Model</label>
+      <input id="v_model" placeholder="npr. A3" />
+
+      <label for="v_plate">Registracija</label>
+      <input id="v_plate" placeholder="npr. RI-123-AB" />
+
+      <label for="v_year">Godina</label>
+      <input id="v_year" type="number" placeholder="npr. 2016 (opcionalno)" />
+
+      <button class="secondary" onclick="addVehicle()">Dodaj vozilo</button>
+      <div id="vehicleMsg" class="msg"></div>
+    </div>
   </div>
 
   <div class="card">
@@ -87,43 +105,148 @@
 <script>
   const API = "/api";
 
-  function token() {
-    return localStorage.getItem("token");
-  }
-  function role() {
-    return localStorage.getItem("role");
-  }
+  function token() { return localStorage.getItem("token"); }
+  function role() { return localStorage.getItem("role"); }
+
   function authHeaders() {
     return {
       "Authorization": "Bearer " + token(),
       "Content-Type": "application/json"
     };
   }
+
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     window.location.href = "/index.html";
   }
+
   function setMsg(el, text, ok=false) {
     el.textContent = text;
     el.className = "msg " + (ok ? "ok" : "err");
   }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function statusLabel(s) {
+    const map = {
+      scheduled: "Auto mora doći",
+      waiting: "Auto čeka",
+      on_lift: "Na dizalici",
+      done: "Gotovo",
+      cancelled: "Otkazano",
+    };
+    return map[s] || s;
+  }
+
+  (function setMinDate(){
+    const el = document.getElementById("service_date");
+    if (!el) return;
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    el.min = `${yyyy}-${mm}-${dd}`;
+  })();
 
   async function loadMe() {
     const pill = document.getElementById("whoami");
     try {
       const res = await fetch(`${API}/auth/me`, { headers: { "Authorization": "Bearer " + token() }});
       const data = await res.json();
-      if (!res.ok) {
-        pill.textContent = "Nevažeća prijava";
-        return;
-      }
+      if (!res.ok) { pill.textContent = "Nevažeća prijava"; return; }
       pill.textContent = `${data.email} (${data.role})`;
-    } catch (e) {
+    } catch {
       pill.textContent = "Greška";
     }
   }
 
+  // ---------- VEHICLES ----------
+  async function loadVehicles() {
+    const sel = document.getElementById("vehicle_id");
+    if (!sel) return;
+
+    sel.innerHTML = `<option value="">Učitavam...</option>`;
+
+    const res = await fetch(`${API}/vehicles`, { headers: { "Authorization": "Bearer " + token() }});
+    const data = await res.json();
+
+    if (!res.ok) {
+      sel.innerHTML = `<option value="">Greška</option>`;
+      return;
+    }
+
+    if (!data.length) {
+      sel.innerHTML = `<option value="">-- Prvo dodaj vozilo --</option>`;
+      return;
+    }
+
+    sel.innerHTML = data.map(v => {
+      const label =
+        `${v.make} ${v.model}` +
+        (v.plate ? ` (${v.plate})` : "") +
+        (v.year ? ` - ${v.year}` : "");
+      return `<option value="${v.id}">${escapeHtml(label)}</option>`;
+    }).join("");
+  }
+
+  async function addVehicle() {
+    const msgEl = document.getElementById("vehicleMsg");
+    msgEl.textContent = "";
+
+    const make = document.getElementById("v_make").value.trim();
+    const model = document.getElementById("v_model").value.trim();
+    const plate = document.getElementById("v_plate").value.trim();
+    const yearRaw = document.getElementById("v_year").value.trim();
+
+    if (!make || !model || !plate) {
+      setMsg(msgEl, "Unesi marku, model i registraciju (tablicu).");
+      return;
+    }
+
+
+    const year = yearRaw ? parseInt(yearRaw, 10) : null;
+
+    try {
+      const res = await fetch(`${API}/vehicles`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          make,
+          model,
+          plate,
+          year: Number.isFinite(year) ? year : null
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješno dodavanje vozila.");
+        return;
+      }
+
+      setMsg(msgEl, "Vozilo dodano!", true);
+
+      document.getElementById("v_make").value = "";
+      document.getElementById("v_model").value = "";
+      document.getElementById("v_plate").value = "";
+      document.getElementById("v_year").value = "";
+
+      await loadVehicles();
+      document.getElementById("vehicle_id").value = data.id;
+    } catch (e) {
+      setMsg(msgEl, "Greška: " + e);
+    }
+  }
+
+  // ---------- ORDERS ----------
   async function loadOrders() {
     const tbody = document.getElementById("ordersTbody");
     const msgEl = document.getElementById("ordersMsg");
@@ -144,23 +267,22 @@
       }
 
       tbody.innerHTML = data.map(o => {
-      const notesShort = (o.notes || "").trim();
-      const display = notesShort.length > 40 ? notesShort.slice(0, 40) + "…" : notesShort;
+        const notesShort = (o.notes || "").trim();
+        const display = notesShort.length > 40 ? notesShort.slice(0, 40) + "…" : notesShort;
 
-      return `
-        <tr>
-          <td style="font-size:12px">${o.id}</td>
-          <td>${escapeHtml(o.vehicle)}</td>
-          <td>${escapeHtml(o.service_date)}</td>
-          <td title="${escapeHtml(notesShort)}">${escapeHtml(display || "-")}</td>
-          <td>${escapeHtml(o.status)}</td>
-          <td>
-            <button class="danger" onclick="cancelOrder('${o.id}', '${o.status}')">Otkazi</button>
-          </td>
-        </tr>
-      `;
-    }).join("");
-
+        return `
+          <tr>
+            <td style="font-size:12px">${o.id}</td>
+            <td>${escapeHtml(o.vehicle)}</td>
+            <td>${escapeHtml(o.service_date)}</td>
+            <td title="${escapeHtml(notesShort)}">${escapeHtml(display || "-")}</td>
+            <td>${escapeHtml(statusLabel(o.status))}</td>
+            <td>
+              <button class="danger" onclick="cancelOrder('${o.id}', '${o.status}')">Otkazi</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
 
     } catch (e) {
       setMsg(msgEl, "Greška: " + e);
@@ -170,13 +292,13 @@
   async function createOrder() {
     const msgEl = document.getElementById("createMsg");
     msgEl.textContent = "";
-    
-    const vehicle = document.getElementById("vehicle").value.trim();
+
+    const vehicle_id = document.getElementById("vehicle_id").value;
     const service_date = document.getElementById("service_date").value;
     const notes = document.getElementById("notes").value.trim();
 
-    if ( !vehicle || !service_date) {
-      setMsg(msgEl, "Popuni sva polja.");
+    if (!vehicle_id || !service_date) {
+      setMsg(msgEl, "Odaberi vozilo i datum.");
       return;
     }
 
@@ -184,11 +306,10 @@
       const res = await fetch(`${API}/orders`, {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ vehicle, service_date, notes: notes || null })
+        body: JSON.stringify({ vehicle_id, service_date, notes: notes || null })
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješno kreiranje narudžbe.");
         return;
@@ -196,7 +317,6 @@
 
       setMsg(msgEl, "Narudžba kreirana!", true);
 
-      document.getElementById("vehicle").value = "";
       document.getElementById("service_date").value = "";
       document.getElementById("notes").value = "";
 
@@ -224,7 +344,6 @@
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješno otkazivanje.");
         return;
@@ -235,15 +354,6 @@
     } catch (e) {
       setMsg(msgEl, "Greška: " + e);
     }
-  }
-
-  function escapeHtml(s) {
-    return String(s)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
   }
 
   (function init() {
@@ -260,6 +370,7 @@
     }
 
     loadMe();
+    loadVehicles();
     loadOrders();
   })();
 </script>

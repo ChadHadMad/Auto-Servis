@@ -2,7 +2,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 from uuid import UUID as UUIDType
 
-from models import Order, User
+from models import Order, User, Vehicle
 
 
 # ---------- USERS ----------
@@ -45,14 +45,49 @@ def delete_user(db: Session, user_id: UUIDType) -> bool:
     return True
 
 
+# ---------- VEHICLES ----------
+def create_vehicle(db: Session, user_id: UUIDType, make: str, model: str, plate: str, year: int | None = None) -> Vehicle:
+    v = Vehicle(user_id=user_id, make=make, model=model, plate=plate, year=year)
+    db.add(v)
+    db.commit()
+    db.refresh(v)
+    return v
+
+
+def list_vehicles(db: Session, user_id: UUIDType) -> list[Vehicle]:
+    return db.query(Vehicle).filter(Vehicle.user_id == user_id).order_by(Vehicle.created_at.desc()).all()
+
+
+def get_vehicle_by_id(db: Session, vehicle_id: UUIDType) -> Vehicle | None:
+    return db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
+
+
+def delete_vehicle(db: Session, user_id: UUIDType, vehicle_id: UUIDType) -> bool:
+    v = db.query(Vehicle).filter(Vehicle.id == vehicle_id, Vehicle.user_id == user_id).first()
+    if not v:
+        return False
+    db.delete(v)
+    db.commit()
+    return True
+
+
 # ---------- ORDERS ----------
-def create_order(db: Session, customer_id: UUIDType, customer_name: str, vehicle: str, service_date: date, notes: str | None = None) -> Order:
+def create_order(
+    db: Session,
+    customer_id: UUIDType,
+    customer_name: str,
+    vehicle_text: str,
+    service_date: date,
+    notes: str | None = None,
+    vehicle_id: UUIDType | None = None,
+) -> Order:
     order = Order(
         customer_id=customer_id,
         customer_name=customer_name,
-        vehicle=vehicle,
+        vehicle=vehicle_text,
+        vehicle_id=vehicle_id,
         service_date=service_date,
-        status="created",
+        status="scheduled",
         notes=notes,
     )
     db.add(order)

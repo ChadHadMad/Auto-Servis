@@ -47,7 +47,6 @@
   <table>
     <thead>
       <tr>
-        <tr>
           <th>ID</th>
           <th>Klijent</th>
           <th>Vozilo</th>
@@ -55,8 +54,6 @@
           <th>Bilješke</th>
           <th>Status</th>
           <th>Promijeni status</th>
-        </tr>
-
       </tr>
     </thead>
     <tbody id="ordersTbody">
@@ -103,6 +100,17 @@
     }
   }
 
+  function statusLabel(s) {
+    const map = {
+      scheduled: "Vozilo mora doći",
+      waiting: "Vozilo čeka",
+      on_lift: "Na dizalici",
+      done: "Gotovo",
+      cancelled: "Otkazano",
+    };
+    return map[s] || s;
+  }
+
   async function loadOrders() {
     const tbody = document.getElementById("ordersTbody");
     const msgEl = document.getElementById("ordersMsg");
@@ -135,7 +143,7 @@
             <td>${escapeHtml(o.vehicle)}</td>
             <td>${escapeHtml(o.service_date)}</td>
             <td title="${escapeHtml(notesShort)}">${escapeHtml(display || "-")}</td>
-            <td class="status-${o.status}">${escapeHtml(o.status)}</td>
+            <td class="status-${o.status}">${escapeHtml(statusLabel(o.status))}</td>
             <td>
               <select onchange="updateStatus('${o.id}', this.value)">
                 ${statusOptions(o.status)}
@@ -152,11 +160,12 @@
   }
 
   function statusOptions(current) {
-    const all = ["created", "in_progress", "finished"];
+    const all = ["scheduled", "waiting", "on_lift", "done", "cancelled"];
     return all.map(s =>
-      `<option value="${s}" ${s === current ? "selected" : ""}>${s}</option>`
+      `<option value="${s}" ${s === current ? "selected" : ""}>${statusLabel(s)}</option>`
     ).join("");
   }
+
 
   async function updateStatus(orderId, newStatus) {
     const msgEl = document.getElementById("ordersMsg");

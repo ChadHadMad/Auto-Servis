@@ -37,7 +37,7 @@ Datum servisa: {event.get('service_date')}
 
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as smtp:
-            smtp.set_debuglevel(1)  # privremeno za debug
+            smtp.set_debuglevel(1)
             refused = smtp.send_message(msg)
 
         if refused:
@@ -78,7 +78,7 @@ def main():
 
             if (
             msg.get("event") == "order_status_changed"
-            and msg.get("new_status") in ("finished", "cancelled")
+            and msg.get("new_status") in ("done", "cancelled")
             ):
                 send_email_to_boss(msg)
 
@@ -86,7 +86,6 @@ def main():
 
         except Exception as e:
             print(f"[worker] Error: {e}", flush=True)
-            # NE ACK → poruka ostaje u queueu
 
     channel.basic_qos(prefetch_count=10)
     channel.basic_consume(queue=RABBIT_QUEUE, on_message_callback=callback)
