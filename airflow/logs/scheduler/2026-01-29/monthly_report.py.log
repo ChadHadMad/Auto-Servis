@@ -1,0 +1,157 @@
+[2026-01-29T00:19:09.481+0000] {processor.py:157} INFO - Started process (PID=210) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:19:09.481+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:19:09.482+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:19:09.482+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:19:10.849+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:19:10.926+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:19:10.926+0000] {manager.py:499} INFO - Created Permission View: %s
+[2026-01-29T00:19:10.936+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:19:10.936+0000] {manager.py:499} INFO - Created Permission View: %s
+[2026-01-29T00:19:10.942+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:19:10.942+0000] {manager.py:499} INFO - Created Permission View: %s
+[2026-01-29T00:19:10.942+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:19:10.942+0000] {security.py:708} INFO - Not syncing DAG-level permissions for DAG 'DAG:monthly_service_report' as access control is unset.
+[2026-01-29T00:19:10.942+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:19:10.942+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:19:10.949+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:19:10.949+0000] {dag.py:2937} INFO - Creating ORM DAG for monthly_service_report
+[2026-01-29T00:19:10.959+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:19:10.959+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:19:11.010+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 1.531 seconds
+[2026-01-29T00:28:11.374+0000] {processor.py:157} INFO - Started process (PID=189) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:28:11.375+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:28:11.375+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:28:11.375+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:28:12.500+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:28:12.659+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:28:12.659+0000] {manager.py:499} INFO - Created Permission View: %s
+[2026-01-29T00:28:12.669+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:28:12.668+0000] {manager.py:499} INFO - Created Permission View: %s
+[2026-01-29T00:28:12.677+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:28:12.677+0000] {manager.py:499} INFO - Created Permission View: %s
+[2026-01-29T00:28:12.677+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:28:12.677+0000] {security.py:708} INFO - Not syncing DAG-level permissions for DAG 'DAG:monthly_service_report' as access control is unset.
+[2026-01-29T00:28:12.678+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:28:12.678+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:28:12.685+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:28:12.685+0000] {dag.py:2937} INFO - Creating ORM DAG for monthly_service_report
+[2026-01-29T00:28:12.692+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:28:12.692+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:28:12.716+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 1.344 seconds
+[2026-01-29T00:28:42.897+0000] {processor.py:157} INFO - Started process (PID=195) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:28:42.898+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:28:42.901+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:28:42.898+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:28:43.286+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:28:43.312+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:28:43.312+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:28:43.327+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:28:43.326+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:28:43.339+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.445 seconds
+[2026-01-29T00:29:13.507+0000] {processor.py:157} INFO - Started process (PID=201) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:29:13.508+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:29:13.508+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:29:13.508+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:29:13.739+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:29:13.765+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:29:13.765+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:29:13.778+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:29:13.778+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:29:13.789+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.285 seconds
+[2026-01-29T00:29:43.926+0000] {processor.py:157} INFO - Started process (PID=207) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:29:43.927+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:29:43.928+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:29:43.927+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:29:44.148+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:29:44.167+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:29:44.167+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:29:44.180+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:29:44.180+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:29:44.191+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.267 seconds
+[2026-01-29T00:30:14.338+0000] {processor.py:157} INFO - Started process (PID=213) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:30:14.338+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:30:14.339+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:30:14.339+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:30:14.580+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:30:14.595+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:30:14.595+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:30:14.608+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:30:14.608+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:30:14.620+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.284 seconds
+[2026-01-29T00:30:44.794+0000] {processor.py:157} INFO - Started process (PID=219) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:30:44.795+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:30:44.797+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:30:44.796+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:30:45.015+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:30:45.031+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:30:45.030+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:30:45.048+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:30:45.047+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:30:45.063+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.270 seconds
+[2026-01-29T00:31:15.232+0000] {processor.py:157} INFO - Started process (PID=228) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:31:15.232+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:31:15.233+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:31:15.233+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:31:15.468+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:31:15.487+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:31:15.486+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:31:15.500+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:31:15.499+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:31:15.513+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.285 seconds
+[2026-01-29T00:31:45.658+0000] {processor.py:157} INFO - Started process (PID=234) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:31:45.659+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:31:45.659+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:31:45.659+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:31:45.880+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:31:45.897+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:31:45.897+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:31:45.909+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:31:45.909+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:31:45.921+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.266 seconds
+[2026-01-29T00:32:16.054+0000] {processor.py:157} INFO - Started process (PID=240) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:32:16.057+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:32:16.058+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:32:16.058+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:32:16.369+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:32:16.390+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:32:16.390+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:32:16.405+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:32:16.404+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:32:16.427+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.375 seconds
+[2026-01-29T00:32:46.567+0000] {processor.py:157} INFO - Started process (PID=246) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:32:46.567+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:32:46.568+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:32:46.568+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:32:46.856+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:32:46.887+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:32:46.886+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:32:46.912+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:32:46.912+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:32:46.939+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.375 seconds
+[2026-01-29T00:33:17.071+0000] {processor.py:157} INFO - Started process (PID=252) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:33:17.073+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:33:17.073+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:33:17.073+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:33:17.322+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:33:17.341+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:33:17.340+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:33:17.356+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:33:17.356+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:33:17.372+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.304 seconds
+[2026-01-29T00:33:47.515+0000] {processor.py:157} INFO - Started process (PID=258) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:33:47.518+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:33:47.521+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:33:47.520+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:33:47.749+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:33:47.797+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:33:47.797+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:33:47.819+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:33:47.818+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:33:47.844+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.333 seconds
+[2026-01-29T00:34:17.994+0000] {processor.py:157} INFO - Started process (PID=264) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:34:17.995+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:34:17.995+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:34:17.995+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:34:18.236+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:34:18.258+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:34:18.258+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:34:18.272+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:34:18.272+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:34:18.291+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.299 seconds
+[2026-01-29T00:34:48.432+0000] {processor.py:157} INFO - Started process (PID=270) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:34:48.433+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:34:48.433+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:34:48.433+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:34:48.696+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:34:48.724+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:34:48.724+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:34:48.739+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:34:48.739+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:34:48.758+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.329 seconds
+[2026-01-29T00:35:18.896+0000] {processor.py:157} INFO - Started process (PID=276) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:35:18.898+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:35:18.899+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:35:18.898+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:35:19.227+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:35:19.255+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:35:19.255+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:35:19.271+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:35:19.271+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:35:19.289+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.396 seconds
+[2026-01-29T00:35:49.426+0000] {processor.py:157} INFO - Started process (PID=282) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:35:49.427+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:35:49.428+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:35:49.428+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:35:49.781+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:35:49.811+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:35:49.811+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:35:49.837+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:35:49.836+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:35:49.861+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.440 seconds
+[2026-01-29T00:36:20.007+0000] {processor.py:157} INFO - Started process (PID=288) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:36:20.008+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:36:20.009+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:36:20.008+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:36:20.265+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:36:20.284+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:36:20.284+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:36:20.298+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:36:20.298+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:36:20.314+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.311 seconds
+[2026-01-29T00:36:50.445+0000] {processor.py:157} INFO - Started process (PID=294) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:36:50.446+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:36:50.448+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:36:50.448+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:36:50.702+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:36:50.723+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:36:50.723+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:36:50.737+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:36:50.737+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:36:50.754+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.311 seconds
+[2026-01-29T00:37:20.893+0000] {processor.py:157} INFO - Started process (PID=300) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:37:20.894+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:37:20.894+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:37:20.894+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:37:21.161+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:37:21.187+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:37:21.185+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:37:21.199+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:37:21.199+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:37:21.220+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.330 seconds
+[2026-01-29T00:37:51.352+0000] {processor.py:157} INFO - Started process (PID=306) to work on /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:37:51.353+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/monthly_report.py for tasks to queue
+[2026-01-29T00:37:51.354+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:37:51.354+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:37:51.613+0000] {processor.py:839} INFO - DAG(s) dict_keys(['monthly_service_report']) retrieved from /opt/airflow/dags/monthly_report.py
+[2026-01-29T00:37:51.633+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:37:51.632+0000] {dag.py:2915} INFO - Sync 1 DAGs
+[2026-01-29T00:37:51.652+0000] {logging_mixin.py:151} INFO - [2026-01-29T00:37:51.651+0000] {dag.py:3696} INFO - Setting next_dagrun for monthly_service_report to 2026-02-01T00:00:00+00:00, run_after=2026-03-01T00:00:00+00:00
+[2026-01-29T00:37:51.670+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/monthly_report.py took 0.321 seconds

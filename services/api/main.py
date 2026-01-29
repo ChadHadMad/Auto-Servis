@@ -53,17 +53,22 @@ def on_startup():
     try:
         existing = crud.get_user_by_email(db, admin_email)
         if not existing:
-            crud.create_user(
-                db,
-                admin_email,
-                hash_password(admin_pass),
-                role="admin"
-            )
-            print("[startup] Admin user created")
+            try:
+                crud.create_user(
+                    db,
+                    admin_email,
+                    hash_password(admin_pass),
+                    role="admin"
+                )
+                print("[startup] Admin user created")
+            except IntegrityError:
+                db.rollback()
+                print("[startup] Admin already created by another instance, skipping seed")
         else:
             print("[startup] Admin already exists, skipping seed")
     finally:
         db.close()
+
 
 
 @app.get("/health")

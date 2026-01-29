@@ -140,7 +140,7 @@
   }
 
   function statusOptions(current) {
-    const all = ["created", "in_progress", "finished", "cancelled"];
+    const all = ["created", "in_progress", "finished"];
     return all.map(s =>
       `<option value="${s}" ${s === current ? "selected" : ""}>${s}</option>`
     ).join("");

@@ -20,8 +20,10 @@ for dir in "${DIRS[@]}"; do
   fi
 done
 
-if [ ! -f /opt/airflow/airflow.db ] && [ ! -f /opt/airflow/initialized ]; then
-  echo "Inicijalizacija baze..."
+INIT_FLAG="/opt/airflow/data/initialized"
+
+if [ ! -f "$INIT_FLAG" ]; then
+  echo "Airflow DB init..."
   airflow db init
 
   echo "Kreiranje admin korisnika..."
@@ -31,9 +33,19 @@ if [ ! -f /opt/airflow/airflow.db ] && [ ! -f /opt/airflow/initialized ]; then
     --firstname Admin \
     --lastname User \
     --role Admin \
-    --email admin@autoservis.com
+    --email admin@autoservis.com || true
 
-  touch /opt/airflow/initialized
+  touch "$INIT_FLAG"
 fi
+
+echo "Provjera Airflow baze (airflow db check)..."
+for i in {1..30}; do
+  if airflow db check; then
+    echo "DB OK"
+    break
+  fi
+  echo "DB još nije spremna... ($i/30)"
+  sleep 2
+done
 
 exec airflow "$@"
