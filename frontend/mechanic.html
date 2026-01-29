@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Autoservis – Mehaničar</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1100px; }
+    body { font-family: Arial, sans-serif; margin: 40px auto; max-width: 1250px; }
     header { display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; }
     .pill { font-size: 12px; padding: 6px 10px; border-radius: 999px; background:#f2f2f2; }
     .row { display:flex; gap: 18px; flex-wrap: wrap; }
@@ -47,16 +47,20 @@
   <table>
     <thead>
       <tr>
-        <th>ID</th>
-        <th>Klijent</th>
-        <th>Vozilo</th>
-        <th>Datum</th>
-        <th>Status</th>
-        <th>Promijeni status</th>
+        <tr>
+          <th>ID</th>
+          <th>Klijent</th>
+          <th>Vozilo</th>
+          <th>Datum</th>
+          <th>Bilješke</th>
+          <th>Status</th>
+          <th>Promijeni status</th>
+        </tr>
+
       </tr>
     </thead>
     <tbody id="ordersTbody">
-      <tr><td colspan="6" class="muted">Učitavam...</td></tr>
+      <tr><td colspan="7" class="muted">Učitavam...</td></tr>
     </tbody>
   </table>
 
@@ -116,23 +120,31 @@
       }
 
       if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="muted">Nema narudžbi.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="muted">Nema narudžbi.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = data.map(o => `
-        <tr>
-          <td style="font-size:12px">${o.id}</td>
-          <td>${escapeHtml(o.customer_name)}</td>
-          <td>${escapeHtml(o.vehicle)}</td>
-          <td>${escapeHtml(o.service_date)}</td>
-          <td class="status-${o.status}">${escapeHtml(o.status)}</td>
-          <td>
-            <select onchange="updateStatus('${o.id}', this.value)">
-              ${statusOptions(o.status)}
-            </select>
-          </td>
-      `).join("");
+      tbody.innerHTML = data.map(o => {
+        const notesShort = (o.notes || "").trim();
+        const display = notesShort.length > 40 ? notesShort.slice(0, 40) + "…" : notesShort;
+
+        return `
+          <tr>
+            <td style="font-size:12px">${o.id}</td>
+            <td>${escapeHtml(o.customer_name)}</td>
+            <td>${escapeHtml(o.vehicle)}</td>
+            <td>${escapeHtml(o.service_date)}</td>
+            <td title="${escapeHtml(notesShort)}">${escapeHtml(display || "-")}</td>
+            <td class="status-${o.status}">${escapeHtml(o.status)}</td>
+            <td>
+              <select onchange="updateStatus('${o.id}', this.value)">
+                ${statusOptions(o.status)}
+              </select>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
 
     } catch (e) {
       setMsg(msgEl, "Greška: " + e);

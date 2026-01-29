@@ -83,7 +83,7 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
     existing = crud.get_user_by_email(db, payload.email)
     if existing:
         raise HTTPException(status_code=409, detail="Email already exists")
-    user = crud.create_user(db, payload.email, hash_password(payload.password), role="customer")
+    user = crud.create_user(db, payload.email, hash_password(payload.password), role="customer", name=payload.name)
     return user
 
 
@@ -146,7 +146,8 @@ def admin_delete_user(
 # ---------- ORDERS ----------
 @app.post("/orders", response_model=OrderOut)
 def create_order(payload: OrderCreate, db: Session = Depends(get_db), user=Depends(require_role("customer"))):
-    created = crud.create_order(db, user.id, payload.customer_name, payload.vehicle, payload.service_date)
+    customer_name = user.name or user.email  # fallback ako nema imena
+    created = crud.create_order(db, user.id, customer_name, payload.vehicle, payload.service_date, notes=payload.notes)
     delete(CACHE_KEY_ALL_ORDERS)
     return created
 

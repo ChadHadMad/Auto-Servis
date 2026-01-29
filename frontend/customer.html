@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Autoservis – Korisnik</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1000px; }
+    body { font-family: Arial, sans-serif; margin: 40px auto; max-width: 1250px; }
     header { display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; }
     .pill { font-size: 12px; padding: 6px 10px; border-radius: 999px; background:#f2f2f2; }
     .row { display:flex; gap: 18px; flex-wrap: wrap; }
@@ -23,6 +23,7 @@
     .ok { color: #0a7a0a; }
     .err { color: #b00020; }
     .muted { color: #666; font-size: 12px; }
+    textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; resize: vertical; }
   </style>
 </head>
 <body>
@@ -42,14 +43,15 @@
   <div class="card">
     <h2>Nova narudžba</h2>
 
-    <label for="customer_name">Ime klijenta</label>
-    <input id="customer_name" placeholder="npr. Matija Tomc" />
-
     <label for="vehicle">Vozilo</label>
     <input id="vehicle" placeholder="npr. Audi A3" />
 
     <label for="service_date">Datum servisa</label>
     <input id="service_date" type="date" />
+
+    <label for="notes">Opis problema (bilješke)</label>
+    <textarea id="notes" rows="4" placeholder="Npr. čuje se zvuk pri kočenju, lampica motora svijetli..."></textarea>
+
 
     <button class="primary" onclick="createOrder()">Dodaj narudžbu</button>
 
@@ -68,12 +70,13 @@
           <th>ID</th>
           <th>Vozilo</th>
           <th>Datum</th>
+          <th>Bilješke</th>
           <th>Status</th>
           <th>Akcije</th>
         </tr>
       </thead>
       <tbody id="ordersTbody">
-        <tr><td colspan="5" class="muted">Učitavam...</td></tr>
+        <tr><td colspan="6" class="muted">Učitavam...</td></tr>
       </tbody>
     </table>
 
@@ -136,21 +139,28 @@
       }
 
       if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="muted">Nema narudžbi.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="muted">Nema narudžbi.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = data.map(o => `
+      tbody.innerHTML = data.map(o => {
+      const notesShort = (o.notes || "").trim();
+      const display = notesShort.length > 40 ? notesShort.slice(0, 40) + "…" : notesShort;
+
+      return `
         <tr>
           <td style="font-size:12px">${o.id}</td>
           <td>${escapeHtml(o.vehicle)}</td>
           <td>${escapeHtml(o.service_date)}</td>
+          <td title="${escapeHtml(notesShort)}">${escapeHtml(display || "-")}</td>
           <td>${escapeHtml(o.status)}</td>
           <td>
             <button class="danger" onclick="cancelOrder('${o.id}', '${o.status}')">Otkazi</button>
           </td>
         </tr>
-      `).join("");
+      `;
+    }).join("");
+
 
     } catch (e) {
       setMsg(msgEl, "Greška: " + e);
@@ -160,12 +170,12 @@
   async function createOrder() {
     const msgEl = document.getElementById("createMsg");
     msgEl.textContent = "";
-
-    const customer_name = document.getElementById("customer_name").value.trim();
+    
     const vehicle = document.getElementById("vehicle").value.trim();
     const service_date = document.getElementById("service_date").value;
+    const notes = document.getElementById("notes").value.trim();
 
-    if (!customer_name || !vehicle || !service_date) {
+    if ( !vehicle || !service_date) {
       setMsg(msgEl, "Popuni sva polja.");
       return;
     }
@@ -174,7 +184,7 @@
       const res = await fetch(`${API}/orders`, {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ customer_name, vehicle, service_date })
+        body: JSON.stringify({ vehicle, service_date, notes: notes || null })
       });
 
       const data = await res.json();
@@ -186,9 +196,9 @@
 
       setMsg(msgEl, "Narudžba kreirana!", true);
 
-      document.getElementById("customer_name").value = "";
       document.getElementById("vehicle").value = "";
       document.getElementById("service_date").value = "";
+      document.getElementById("notes").value = "";
 
       loadOrders();
     } catch (e) {

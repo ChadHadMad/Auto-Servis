@@ -12,6 +12,7 @@ class User(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String, unique=True, nullable=False, index=True)
+    name = Column(String, nullable=True)
     password_hash = Column(String, nullable=False)
     role = Column(String, nullable=False, default="customer")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -36,4 +37,5 @@ class Order(Base):
     vehicle = Column(String, nullable=False)
     service_date = Column(Date, nullable=False)
     status = Column(String, nullable=False, default="created")
+    notes = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

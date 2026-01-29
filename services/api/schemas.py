@@ -7,6 +7,7 @@ from uuid import UUID
 class RegisterIn(BaseModel):
     email: EmailStr
     password: str
+    name: str
 
 class LoginIn(BaseModel):
     email: EmailStr
@@ -20,6 +21,7 @@ class TokenOut(BaseModel):
 class UserOut(BaseModel):
     id: UUID
     email: EmailStr
+    name: str | None = None
     role: str
     created_at: datetime
 
@@ -31,9 +33,9 @@ class RoleUpdateIn(BaseModel):
 
 # ---------- ORDERS ----------
 class OrderCreate(BaseModel):
-    customer_name: str
     vehicle: str
     service_date: date
+    notes: str | None = None
 
 class OrderOut(BaseModel):
     id: UUID
@@ -42,6 +44,7 @@ class OrderOut(BaseModel):
     vehicle: str
     service_date: date
     status: str
+    notes: str | None = None
     created_at: datetime
 
     class Config:

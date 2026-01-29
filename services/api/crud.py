@@ -14,8 +14,8 @@ def get_user_by_id(db: Session, user_id: UUIDType) -> User | None:
     return db.query(User).filter(User.id == user_id).first()
 
 
-def create_user(db: Session, email: str, password_hash: str, role: str = "customer") -> User:
-    user = User(email=email, password_hash=password_hash, role=role)
+def create_user(db: Session, email: str, password_hash: str, role: str = "customer", name: str | None = None) -> User:
+    user = User(email=email, password_hash=password_hash, role=role, name=name)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -46,13 +46,14 @@ def delete_user(db: Session, user_id: UUIDType) -> bool:
 
 
 # ---------- ORDERS ----------
-def create_order(db: Session, customer_id: UUIDType, customer_name: str, vehicle: str, service_date: date) -> Order:
+def create_order(db: Session, customer_id: UUIDType, customer_name: str, vehicle: str, service_date: date, notes: str | None = None) -> Order:
     order = Order(
         customer_id=customer_id,
         customer_name=customer_name,
         vehicle=vehicle,
         service_date=service_date,
         status="created",
+        notes=notes,
     )
     db.add(order)
     db.commit()
