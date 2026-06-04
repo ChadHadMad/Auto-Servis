@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Autoservis – AI Pomoć na cesti</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0eeea;
+      --border: #e0ddd8; --border2: #ccc9c3; --text: #1a1916;
+      --text2: #6b6860; --text3: #9c9990; --accent: #c0392b;
+      --accent-bg: #fdf0ef; --accent-border: #f5c6c2;
+      --blue: #1a5fa8; --blue-bg: #edf3fb; --blue-border: #b8d0ef;
+      --green: #1a6b3a; --green-bg: #edf6f1; --green-border: #a8d8ba;
+      --orange: #b85c00; --orange-bg: #fef3e8; --orange-border: #f5cc99;
+      --radius: 8px; --radius-lg: 14px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; height: 100vh; display: flex; flex-direction: column; }
+    .header { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 12px 20px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+    .header-logo { font-size: 22px; }
+    .header-title { font-size: 15px; font-weight: 600; }
+    .header-sub { font-size: 12px; color: var(--text2); }
+    .header-links { margin-left: auto; display: flex; gap: 12px; align-items: center; }
+    .header-links a { font-size: 13px; color: var(--text2); text-decoration: none; }
+    .header-links a:hover { color: var(--text); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; margin-right: 4px; }
+
+    /* Language toggle */
+    .lang-toggle { display: flex; gap: 4px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 20px; padding: 3px; }
+    .lang-btn { font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 16px; border: none; background: none; color: var(--text2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .lang-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    #vehicleScreen { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .select-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .select-card h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+    .select-card p { color: var(--text2); font-size: 14px; margin-bottom: 20px; }
+    .vehicle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .vehicle-btn { background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 12px; cursor: pointer; text-align: left; transition: border-color 0.15s, background 0.15s; font-family: inherit; }
+    .vehicle-btn:hover { border-color: var(--blue); background: var(--blue-bg); }
+    .vehicle-btn-make { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; }
+    .vehicle-btn-model { font-size: 15px; font-weight: 600; margin: 2px 0; }
+    .vehicle-btn-year { font-size: 13px; color: var(--text2); }
+    .search-input { width: 100%; padding: 9px 12px; border: 0.5px solid var(--border2); border-radius: var(--radius); font-size: 14px; font-family: inherit; margin-bottom: 14px; background: var(--surface); color: var(--text); outline: none; }
+    .search-input:focus { border-color: var(--blue); }
+    .emergency-note { margin-top: 16px; text-align: center; font-size: 12px; color: var(--text2); background: var(--accent-bg); border: 0.5px solid var(--accent-border); border-radius: var(--radius); padding: 8px; }
+
+    #chatScreen { flex: 1; display: none; flex-direction: column; max-width: 780px; width: 100%; margin: 0 auto; }
+    .chat-vehicle-bar { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .chat-vehicle-name { font-weight: 600; font-size: 14px; }
+    .chat-vehicle-year { font-size: 13px; color: var(--text2); }
+    .change-vehicle-btn { margin-left: auto; font-size: 12px; color: var(--text2); border: 0.5px solid var(--border); background: var(--surface); padding: 4px 10px; border-radius: 20px; cursor: pointer; font-family: inherit; }
+    .dispatch-status { padding: 8px 16px; font-size: 12px; font-weight: 500; display: none; }
+    .dispatch-status.waiting { background: var(--orange-bg); border-bottom: 0.5px solid var(--orange-border); color: var(--orange); display: block; }
+    .dispatch-status.sent { background: var(--green-bg); border-bottom: 0.5px solid var(--green-border); color: var(--green); display: block; }
+    .messages { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; background: var(--bg); }
+    .msg-row { display: flex; gap: 10px; }
+    .msg-row.user { flex-direction: row-reverse; }
+    .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--surface2); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--text2); flex-shrink: 0; margin-top: 2px; }
+    .bubble { max-width: 80%; padding: 10px 14px; border-radius: 14px; border: 0.5px solid var(--border); font-size: 14px; line-height: 1.65; white-space: pre-wrap; }
+    .bubble strong { font-weight: 600; }
+    .bubble.assistant { background: var(--surface); border-radius: 4px 14px 14px 14px; }
+    .bubble.user { background: var(--blue-bg); border-color: var(--blue-border); border-radius: 14px 14px 4px 14px; }
+    .bubble.dispatch { background: var(--accent-bg); border-color: var(--accent-border); border-radius: 4px 14px 14px 14px; }
+    .bubble.confirmed { background: var(--green-bg); border-color: var(--green-border); border-radius: 4px 14px 14px 14px; }
+    .dispatch-badge { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 8px; padding-bottom: 8px; border-bottom: 0.5px solid var(--accent-border); }
+    .sources { margin-top: 8px; font-size: 11px; color: var(--text3); border-top: 0.5px solid var(--border); padding-top: 6px; }
+    .typing { display: flex; gap: 5px; align-items: center; padding: 14px; }
+    .typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); animation: bounce 1.2s ease-in-out infinite; }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-6px); } }
+    .quick-wrap { padding: 8px 16px 0; background: var(--bg); flex-shrink: 0; }
+    .quick-label { font-size: 11px; color: var(--text3); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .quick-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .quick-btn { font-size: 12px; padding: 4px 11px; border-radius: 20px; border: 0.5px solid var(--border); background: var(--surface); color: var(--text2); cursor: pointer; font-family: inherit; }
+    .quick-btn:hover { color: var(--text); border-color: var(--blue); }
+    .location-hint { margin: 8px 16px 0; padding: 8px 12px; background: var(--accent-bg); border: 0.5px solid var(--accent-border); border-radius: var(--radius); font-size: 13px; color: var(--accent); flex-shrink: 0; }
+    .input-row { display: flex; gap: 8px; padding: 12px 16px; background: var(--surface); border-top: 0.5px solid var(--border); flex-shrink: 0; align-items: flex-end; }
+    .chat-textarea { flex: 1; resize: none; border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 8px 12px; font-size: 14px; font-family: inherit; line-height: 1.5; background: var(--surface2); color: var(--text); outline: none; }
+    .chat-textarea:focus { border-color: var(--blue); }
+    .send-btn { padding: 9px 16px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--surface); color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; white-space: nowrap; align-self: flex-end; }
+    .send-btn:hover { background: var(--surface2); }
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .send-btn.dispatch { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+    .loading-state { color: var(--text2); font-size: 13px; padding: 20px; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">🔧</div>
+  <div>
+    <div class="header-title">Autoservis AI Pomoć</div>
+    <div class="header-sub"><span class="status-dot"></span>Dostupno 24/7 · Bez prijave</div>
+  </div>
+  <div class="header-links">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="langHR" onclick="setLanguage('hr')">HR</button>
+      <button class="lang-btn" id="langEN" onclick="setLanguage('en')">EN</button>
+    </div>
+    <a href="/index.html">Prijava</a>
+    <a href="/chat-admin.html">Admin</a>
+  </div>
+</div>
+
+<div id="vehicleScreen">
+  <div class="select-card">
+    <h2 id="txt_selectTitle">Odaberite vozilo</h2>
+    <p id="txt_selectDesc">Odaberite vaše vozilo za pristup priručniku i AI pomoći na cesti.</p>
+    <input class="search-input" id="vehicleSearch" placeholder="Pretraži..." oninput="filterVehicles()" />
+    <div id="vehicleGrid" class="vehicle-grid">
+      <div class="loading-state">Učitavanje...</div>
+    </div>
+    <div class="emergency-note" id="txt_emergency">
+      ⚠️ U hitnoj situaciji odmah nazovite <strong>112</strong>
+    </div>
+  </div>
+</div>
+
+<div id="chatScreen">
+  <div class="chat-vehicle-bar">
+    <div>
+      <span class="chat-vehicle-name" id="chatVehicleName">—</span>
+      <span class="chat-vehicle-year" id="chatVehicleYear"></span>
+    </div>
+    <button class="change-vehicle-btn" onclick="resetToVehicleSelect()" id="txt_changeVehicle">Promijeni vozilo</button>
+  </div>
+  <div class="dispatch-status" id="dispatchStatus"></div>
+  <div class="messages" id="messages"></div>
+  <div class="quick-wrap" id="quickWrap" style="display:none;">
+    <div class="quick-label" id="txt_quickLabel">Česti problemi</div>
+    <div class="quick-row" id="quickRow"></div>
+  </div>
+  <div class="location-hint" id="locationHint" style="display:none;">
+    📍 <span id="txt_locationHint">Unesite lokaciju — adresu ili GPS koordinate</span>
+  </div>
+  <div class="input-row">
+    <textarea class="chat-textarea" id="chatInput" rows="2" onkeydown="handleKey(event)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">Pošalji</button>
+  </div>
+</div>
+
+<script>
+  const RAG_API = "/chat-api";
+
+  // ── Jezik ──────────────────────────────────────────────────────────────────
+  let currentLang = "hr";
+
+  const TRANSLATIONS = {
+    hr: {
+      selectTitle: "Odaberite vozilo",
+      selectDesc: "Odaberite vaše vozilo za pristup priručniku i AI pomoći na cesti.",
+      emergency: "⚠️ U hitnoj situaciji odmah nazovite <strong>112</strong>",
+      changeVehicle: "Promijeni vozilo",
+      quickLabel: "Česti problemi",
+      locationHint: "Unesite lokaciju — adresu ili GPS koordinate (npr. \"Ilica 50, Zagreb\")",
+      placeholder: "Opišite problem s vozilom...",
+      locationPlaceholder: "Unesite lokaciju (adresa ili GPS)...",
+      send: "Pošalji",
+      sendLocation: "📍 Pošalji lokaciju",
+      welcome: (make, model, year) => `Pozdrav! Spreman sam pomoći s vašim vozilom **${make} ${model} ${year}**.\n\nOpišite problem i dat ću vam upute iz priručnika, ili ću organizirati dolazak tehničara.`,
+      dispatchWaiting: "⏳ Čekam lokaciju za slanje tehničara...",
+      dispatchSent: "✅ Tehničar upućen — pratite status",
+      dispatchBadge: "⚠️ Potrebna intervencija tehničara",
+      dispatchConfirm: (loc) => `✅ Tehničar je upućen na lokaciju: **${loc}**\n\nDo dolaska:\n1. Ostanite u vozilu ako je sigurno\n2. Upalite upozoravajuća svjetla (hazard)\n3. Postavite trokut ako imate\n\nProcijenjeno čekanje: 20–45 min.\nHitno: nazovite **112**`,
+      noVehicles: "Nema dostupnih priručnika. Administrator treba uploadati PDF-ove.",
+      noResults: "Nema rezultata.",
+      quickProblems: ["Guma mi je pukla","Auto se ne upali","Motor se pregrijava","Nestalo mi je gorivo","Pregorio je osigurač","Upaljeno upozoravajuće svjetlo"],
+      manualPages: "Priručnik str:",
+      connError: "Ne mogu se spojiti na server. Je li backend pokrenut?",
+      commError: "Greška u komunikaciji. Pokušajte ponovo.",
+    },
+    en: {
+      selectTitle: "Select your vehicle",
+      selectDesc: "Select your vehicle to access the manual and AI roadside assistance.",
+      emergency: "⚠️ In an emergency, immediately call <strong>112</strong>",
+      changeVehicle: "Change vehicle",
+      quickLabel: "Common problems",
+      locationHint: "Enter location — address or GPS coordinates (e.g. \"Main St 50, Zagreb\")",
+      placeholder: "Describe your vehicle problem...",
+      locationPlaceholder: "Enter location (address or GPS)...",
+      send: "Send",
+      sendLocation: "📍 Send location",
+      welcome: (make, model, year) => `Hello! I'm ready to help with your **${make} ${model} ${year}**.\n\nDescribe the problem and I'll give you instructions from the manual, or arrange for a technician.`,
+      dispatchWaiting: "⏳ Waiting for location to dispatch technician...",
+      dispatchSent: "✅ Technician dispatched — track status",
+      dispatchBadge: "⚠️ Technician intervention required",
+      dispatchConfirm: (loc) => `✅ Technician dispatched to: **${loc}**\n\nWhile waiting:\n1. Stay in the vehicle if safe\n2. Turn on hazard lights\n3. Set up warning triangle if available\n\nEstimated wait: 20–45 min.\nEmergency: call **112**`,
+      noVehicles: "No manuals available. Administrator needs to upload PDFs.",
+      noResults: "No results.",
+      quickProblems: ["Flat tire","Car won't start","Engine overheating","Out of fuel","Blown fuse","Warning light on"],
+      manualPages: "Manual p.:",
+      connError: "Cannot connect to server. Is the backend running?",
+      commError: "Communication error. Please try again.",
+    }
+  };
+
+  function t() { return TRANSLATIONS[currentLang]; }
+
+  function setLanguage(lang) {
+    currentLang = lang;
+    document.getElementById("langHR").classList.toggle("active", lang === "hr");
+    document.getElementById("langEN").classList.toggle("active", lang === "en");
+    updateUI();
+  }
+
+  function updateUI() {
+    const tr = t();
+    document.getElementById("txt_selectTitle").textContent = tr.selectTitle;
+    document.getElementById("txt_selectDesc").textContent = tr.selectDesc;
+    document.getElementById("txt_emergency").innerHTML = tr.emergency;
+    document.getElementById("txt_changeVehicle").textContent = tr.changeVehicle;
+    document.getElementById("txt_quickLabel").textContent = tr.quickLabel;
+    document.getElementById("txt_locationHint").textContent = tr.locationHint;
+    document.getElementById("chatInput").placeholder = dispatchMode ? tr.locationPlaceholder : tr.placeholder;
+    document.getElementById("sendBtn").textContent = dispatchMode ? tr.sendLocation : tr.send;
+    document.getElementById("vehicleSearch").placeholder = tr.selectTitle + "...";
+    if (document.getElementById("quickRow").children.length > 0) showQuickPrompts();
+  }
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let currentVehicle = null;
+  let allVehicles = [];
+  let messages = [];
+  let dispatchMode = false;
+  let dispatchSent = false;
+  let problemSummary = "";
+
+  // ── Vehicles ───────────────────────────────────────────────────────────────
+  async function loadVehicles() {
+    try {
+      const r = await fetch(`${RAG_API}/vehicles`);
+      const data = await r.json();
+      allVehicles = data.vehicles || [];
+      renderVehicles(allVehicles);
+    } catch (e) {
+      document.getElementById("vehicleGrid").innerHTML =
+        `<div class="loading-state" style="color:#c0392b;">${t().connError}</div>`;
+    }
+  }
+
+  function filterVehicles() {
+    const q = document.getElementById("vehicleSearch").value.toLowerCase();
+    renderVehicles(allVehicles.filter(v =>
+      v.make.toLowerCase().includes(q) || v.model.toLowerCase().includes(q) || String(v.year).includes(q)
+    ));
+  }
+
+  function renderVehicles(list) {
+    const grid = document.getElementById("vehicleGrid");
+    if (!list.length) {
+      grid.innerHTML = `<div class="loading-state">${allVehicles.length === 0 ? t().noVehicles : t().noResults}</div>`;
+      return;
+    }
+    grid.innerHTML = list.map(v => `
+      <button class="vehicle-btn" onclick="selectVehicle(${JSON.stringify(v).replace(/"/g, '&quot;')})">
+        <div class="vehicle-btn-make">${esc(v.make)}</div>
+        <div class="vehicle-btn-model">${esc(v.model)}</div>
+        <div class="vehicle-btn-year">${v.year}</div>
+      </button>`).join("");
+  }
+
+  function selectVehicle(v) {
+    currentVehicle = v;
+    messages = []; dispatchMode = false; dispatchSent = false; problemSummary = "";
+    document.getElementById("chatVehicleName").textContent = `${v.make} ${v.model}`;
+    document.getElementById("chatVehicleYear").textContent = v.year;
+    document.getElementById("vehicleScreen").style.display = "none";
+    document.getElementById("chatScreen").style.display = "flex";
+    document.getElementById("dispatchStatus").className = "dispatch-status";
+    document.getElementById("locationHint").style.display = "none";
+    document.getElementById("sendBtn").className = "send-btn";
+    document.getElementById("sendBtn").textContent = t().send;
+    document.getElementById("messages").innerHTML = "";
+    appendBubble("assistant", t().welcome(v.make, v.model, v.year));
+    showQuickPrompts();
+    updateUI();
+  }
+
+  function resetToVehicleSelect() {
+    currentVehicle = null;
+    document.getElementById("vehicleScreen").style.display = "flex";
+    document.getElementById("chatScreen").style.display = "none";
+  }
+
+  // ── Chat ───────────────────────────────────────────────────────────────────
+  function showQuickPrompts() {
+    const wrap = document.getElementById("quickWrap");
+    const row = document.getElementById("quickRow");
+    wrap.style.display = "block";
+    row.innerHTML = t().quickProblems.map((p, i) =>
+      `<button class="quick-btn" onclick="useQuickByIndex(${i})">${p}</button>`).join("");
+}
+
+function useQuickByIndex(i) {
+    const text = t().quickProblems[i];
+    document.getElementById("chatInput").value = text;
+    document.getElementById("chatInput").focus();
+    document.getElementById("quickWrap").style.display = "none";
+}
+
+  function useQuick(text) {
+    document.getElementById("chatInput").value = text;
+    document.getElementById("chatInput").focus();
+    document.getElementById("quickWrap").style.display = "none";
+  }
+
+  function handleKey(e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById("chatInput");
+    const text = input.value.trim();
+    if (!text || !currentVehicle) return;
+    input.value = "";
+    document.getElementById("quickWrap").style.display = "none";
+    document.getElementById("sendBtn").disabled = true;
+    appendBubble("user", text);
+    messages.push({ role: "user", content: text });
+
+    if (dispatchMode) { await sendDispatch(text); return; }
+    if (messages.filter(m => m.role === "user").length === 1) problemSummary = text;
+
+    showTyping();
+    try {
+      const r = await fetch(`${RAG_API}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vehicle_key: currentVehicle.key,
+          messages: messages,
+          problem_summary: problemSummary,
+          language: currentLang === "hr" ? "Croatian" : "English",
+        }),
+      });
+      const data = await r.json();
+      hideTyping();
+      if (!r.ok) { appendBubble("assistant", t().commError); document.getElementById("sendBtn").disabled = false; return; }
+      messages.push({ role: "assistant", content: data.reply });
+      if (data.needs_dispatch && !dispatchSent) {
+        appendBubble("dispatch", data.reply, data.sources);
+        dispatchMode = true;
+        document.getElementById("locationHint").style.display = "block";
+        document.getElementById("dispatchStatus").textContent = t().dispatchWaiting;
+        document.getElementById("dispatchStatus").className = "dispatch-status waiting";
+        document.getElementById("sendBtn").className = "send-btn dispatch";
+        document.getElementById("sendBtn").textContent = t().sendLocation;
+        document.getElementById("chatInput").placeholder = t().locationPlaceholder;
+      } else {
+        appendBubble("assistant", data.reply, data.sources);
+      }
+    } catch (e) {
+      hideTyping();
+      appendBubble("assistant", t().commError);
+    }
+    document.getElementById("sendBtn").disabled = false;
+  }
+
+  async function sendDispatch(location) {
+    showTyping();
+    try {
+      const r = await fetch(`${RAG_API}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vehicle_key: currentVehicle.key,
+          messages: messages,
+          location: location,
+          problem_summary: problemSummary,
+          language: currentLang === "hr" ? "Croatian" : "English",
+        }),
+      });
+      const data = await r.json();
+      hideTyping();
+      messages.push({ role: "assistant", content: data.reply });
+      dispatchMode = false; dispatchSent = true;
+      document.getElementById("locationHint").style.display = "none";
+      document.getElementById("dispatchStatus").textContent = t().dispatchSent;
+      document.getElementById("dispatchStatus").className = "dispatch-status sent";
+      document.getElementById("sendBtn").className = "send-btn";
+      document.getElementById("sendBtn").textContent = t().send;
+      document.getElementById("chatInput").placeholder = t().placeholder;
+      appendBubble("confirmed", t().dispatchConfirm(location));
+    } catch (e) {
+      hideTyping();
+      appendBubble("assistant", t().commError);
+    }
+    document.getElementById("sendBtn").disabled = false;
+  }
+
+  // ── UI helpers ─────────────────────────────────────────────────────────────
+  function appendBubble(type, text, sources) {
+    const msgs = document.getElementById("messages");
+    const isUser = type === "user";
+    const row = document.createElement("div");
+    row.className = `msg-row${isUser ? " user" : ""}`;
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = isUser ? (currentLang === "hr" ? "Vi" : "You") : "AI";
+    const bubble = document.createElement("div");
+    bubble.className = `bubble ${type}`;
+    if (type === "dispatch") {
+      const badge = document.createElement("div");
+      badge.className = "dispatch-badge";
+      badge.textContent = t().dispatchBadge;
+      bubble.appendChild(badge);
+    }
+    const content = document.createElement("div");
+    content.innerHTML = formatText(text);
+    bubble.appendChild(content);
+    if (sources && sources.length > 0) {
+      const src = document.createElement("div");
+      src.className = "sources";
+      src.textContent = t().manualPages + " " + sources.map(s => s.page).join(", ");
+      bubble.appendChild(src);
+    }
+    row.appendChild(isUser ? bubble : avatar);
+    row.appendChild(isUser ? avatar : bubble);
+    msgs.appendChild(row);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  let typingEl = null;
+  function showTyping() {
+    const msgs = document.getElementById("messages");
+    typingEl = document.createElement("div");
+    typingEl.className = "msg-row";
+    typingEl.innerHTML = `<div class="avatar">AI</div><div class="bubble assistant typing"><span></span><span></span><span></span></div>`;
+    msgs.appendChild(typingEl);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  function hideTyping() { if (typingEl) { typingEl.remove(); typingEl = null; } }
+
+  function formatText(text) {
+    return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>");
+  }
+  function esc(s) {
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  loadVehicles();
+</script>
+</body>
+</html>

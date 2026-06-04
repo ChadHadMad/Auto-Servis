@@ -182,14 +182,13 @@ services:
       - ollama-models:/root/.ollama
     networks:
       - autoservis-net
-    # Ako imaš Nvidia GPU, odkomentiraj:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   ollama-pull:
     image: ollama/ollama:latest
@@ -210,6 +209,8 @@ services:
   rag-api:
     build: ./rag-api
     restart: unless-stopped
+    ports:
+      - "8001:8001"
     environment:
       - ADMIN_KEY=${ADMIN_KEY}
       - OLLAMA_URL=http://ollama:11434
