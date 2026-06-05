@@ -1,5 +1,6 @@
 """
 main.py — RAG Chatbot API s Ollama (lokalni LLM, bez eksternih API-ja)
++ Digitalna servisna knjižica (MongoDB)
 """
 
 import os
@@ -10,15 +11,22 @@ from pathlib import Path
 import httpx
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Optional
 
 from indexer import (
     index_pdf, search, delete_vehicle as qdrant_delete,
     load_registry, ensure_collection
 )
 from dispatch import create_dispatch, list_dispatches, update_dispatch_status
+from service_book import (
+    ensure_indexes, create_vehicle, list_vehicles,
+    get_vehicle_by_vin, get_vehicle_by_plate,
+    update_vehicle, delete_vehicle,
+    add_service_entry, delete_service_entry,
+)
 
-app = FastAPI(title="Autoservis RAG API", version="2.0.0")
+app = FastAPI(title="Autoservis RAG API", version="3.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -102,6 +110,12 @@ def startup():
     except Exception as e:
         print(f"[startup] Qdrant greška: {e}")
 
+    try:
+        ensure_indexes()
+        print("[startup] MongoDB indeksi OK")
+    except Exception as e:
+        print(f"[startup] MongoDB greška: {e}")
+
 
 async def ollama_chat(messages: list[dict], system: str) -> str:
     payload = {
@@ -126,6 +140,10 @@ async def ollama_chat(messages: list[dict], system: str) -> str:
             raise HTTPException(status_code=502, detail=f"Ollama nije dostupan: {str(e)}")
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# HEALTH
+# ═══════════════════════════════════════════════════════════════════════════════
+
 @app.get("/health")
 async def health():
     ollama_ok = False
@@ -143,8 +161,12 @@ async def health():
     }
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# RAG — VEHICLES (Qdrant priručnici)
+# ═══════════════════════════════════════════════════════════════════════════════
+
 @app.get("/vehicles")
-def list_vehicles():
+def list_rag_vehicles():
     return {"vehicles": list(load_registry().values())}
 
 
@@ -178,12 +200,16 @@ async def upload_vehicle(
 
 
 @app.delete("/vehicles/{key}")
-def remove_vehicle(key: str, admin_key: str):
+def remove_rag_vehicle(key: str, admin_key: str):
     if admin_key != ADMIN_KEY:
         raise HTTPException(status_code=401, detail="Nevažeći admin ključ")
     qdrant_delete(key)
     return {"message": f"Vozilo {key} obrisano"}
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHAT
+# ═══════════════════════════════════════════════════════════════════════════════
 
 class ChatMessage(BaseModel):
     role: str
@@ -195,7 +221,7 @@ class ChatRequest(BaseModel):
     location: str | None = None
     contact: str | None = None
     problem_summary: str | None = None
-    language: str = "Croatian"  # Croatian ili English
+    language: str = "Croatian"
 
 
 @app.post("/chat")
@@ -209,8 +235,6 @@ async def chat(req: ChatRequest):
     last_query = user_messages[-1].content if user_messages else ""
 
     expanded_query = expand_query(last_query)
-    print(f"[chat] Lang: {req.language} | Query: '{last_query}' → '{expanded_query}'")
-
     results = search(req.vehicle_key, expanded_query, top_k=6)
     context = "\n\n---\n\n".join(
         f"[Stranica {r['page']}]\n{r['text']}" for r in results
@@ -262,6 +286,10 @@ async def chat(req: ChatRequest):
     }
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# DISPATCHES
+# ═══════════════════════════════════════════════════════════════════════════════
+
 @app.get("/dispatches")
 def get_dispatches(status: str | None = None, admin_key: str = ""):
     if admin_key != ADMIN_KEY:
@@ -283,3 +311,152 @@ def update_dispatch(dispatch_id: str, payload: DispatchStatusUpdate):
     if not updated:
         raise HTTPException(status_code=404, detail="Dispatch nije pronađen")
     return updated
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SERVICE BOOK — Pydantic modeli
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class VehicleInfo(BaseModel):
+    make: str
+    model: str
+    year: int
+    engine_cc: Optional[int] = None
+    engine_kw: Optional[int] = None
+
+class OwnerInfo(BaseModel):
+    name: str
+    phone: Optional[str] = ""
+    email: Optional[str] = ""
+
+class ServiceBookCreate(BaseModel):
+    vin: str
+    plate: str
+    vehicle: VehicleInfo
+    owner: OwnerInfo
+    next_service_km: Optional[int] = None
+
+class ServiceBookUpdate(BaseModel):
+    vehicle: Optional[VehicleInfo] = None
+    owner: Optional[OwnerInfo] = None
+    plate: Optional[str] = None
+    next_service_km: Optional[int] = None
+
+class ServiceItems(BaseModel):
+    oil_filter:           Optional[bool] = None
+    cabin_filter:         Optional[bool] = None
+    fuel_filter:          Optional[bool] = None
+    air_filter:           Optional[bool] = None
+    spark_plug:           Optional[bool] = None
+    toothed_belt:         Optional[bool] = None
+    micro_belt:           Optional[bool] = None
+    brake_fluid:          Optional[bool] = None
+    coolant:              Optional[bool] = None
+    gearbox_oil:          Optional[bool] = None
+    power_steering_fluid: Optional[bool] = None
+
+class ServiceEntryCreate(BaseModel):
+    date: str                          # "YYYY-MM-DD"
+    km: int
+    oil_type: Optional[str] = ""
+    items: ServiceItems = Field(default_factory=ServiceItems)
+    extra: Optional[str] = ""
+
+class ServiceEntryDelete(BaseModel):
+    date: str
+    km: int
+
+# Auth header helper — koristimo isti ADMIN_KEY sustav + "role" header
+# U stvarnoj prod verziji ovo bi bio JWT iz glavnog API-ja,
+# ali ovdje koristimo jednostavan pristup: admin_key za admina,
+# mechanic_key za mehaničare (isti key s dodatnim "role" parametrom)
+
+def require_service_auth(admin_key: str, role: str = ""):
+    """
+    Dozvoljava pristup ako je admin_key ispravan.
+    role se sprema uz zapis (tko je upisao).
+    """
+    if admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=401, detail="Nevažeći ključ")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SERVICE BOOK — Endpointi
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/service-book")
+def sb_list(admin_key: str = ""):
+    require_service_auth(admin_key)
+    return {"vehicles": list_vehicles()}
+
+
+@app.get("/service-book/{vin}")
+def sb_get(vin: str, admin_key: str = ""):
+    require_service_auth(admin_key)
+    doc = get_vehicle_by_vin(vin)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
+    return doc
+
+
+@app.get("/service-book/plate/{plate}")
+def sb_get_by_plate(plate: str, admin_key: str = ""):
+    require_service_auth(admin_key)
+    doc = get_vehicle_by_plate(plate)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
+    return doc
+
+
+@app.post("/service-book", status_code=201)
+def sb_create(payload: ServiceBookCreate, admin_key: str = ""):
+    require_service_auth(admin_key)
+    try:
+        doc = create_vehicle(payload.model_dump())
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    return doc
+
+
+@app.put("/service-book/{vin}")
+def sb_update(vin: str, payload: ServiceBookUpdate, admin_key: str = ""):
+    require_service_auth(admin_key)
+    updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    if not updates:
+        raise HTTPException(status_code=400, detail="Nema podataka za ažuriranje")
+    doc = update_vehicle(vin, updates)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
+    return doc
+
+
+@app.delete("/service-book/{vin}")
+def sb_delete(vin: str, admin_key: str = ""):
+    require_service_auth(admin_key)
+    ok = delete_vehicle(vin)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
+    return {"message": f"Vozilo {vin} obrisano"}
+
+
+@app.post("/service-book/{vin}/entries")
+def sb_add_entry(
+    vin: str,
+    payload: ServiceEntryCreate,
+    admin_key: str = "",
+    recorded_by: str = "unknown",
+):
+    require_service_auth(admin_key)
+    doc = add_service_entry(vin, payload.model_dump(), recorded_by)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
+    return doc
+
+
+@app.delete("/service-book/{vin}/entries")
+def sb_delete_entry(vin: str, payload: ServiceEntryDelete, admin_key: str = ""):
+    require_service_auth(admin_key)
+    doc = delete_service_entry(vin, payload.date, payload.km)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Vozilo ili zapis nije pronađen")
+    return doc

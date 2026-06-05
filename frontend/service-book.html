@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Servisna knjižica – Autoservis</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1916; font-size: 14px; min-height: 100vh; }
+
+    .header { background: #fff; border-bottom: 0.5px solid #e0ddd8; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .header-title { font-size: 16px; font-weight: 600; }
+    .header-sub { font-size: 12px; color: #6b6860; }
+    .header-links { display: flex; gap: 12px; align-items: center; }
+    .header-links a { font-size: 13px; color: #6b6860; text-decoration: none; }
+    .header-links a:hover { color: #1a1916; }
+
+    /* Login */
+    .login-page { min-height: calc(100vh - 57px); display: flex; align-items: center; justify-content: center; }
+    .login-card { background: #fff; border: 0.5px solid #e0ddd8; border-radius: 12px; padding: 28px; width: 340px; }
+    .login-card h2 { font-size: 18px; margin-bottom: 6px; }
+    .login-card p { color: #6b6860; font-size: 13px; margin-bottom: 16px; }
+    .login-card input { width: 100%; padding: 8px 12px; border: 0.5px solid #ccc9c3; border-radius: 8px; font-size: 14px; font-family: inherit; margin-bottom: 10px; outline: none; }
+    .login-card input:focus { border-color: #1a5fa8; }
+
+    /* Layout */
+    .content { max-width: 1100px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; gap: 16px; }
+    .two-col { display: grid; grid-template-columns: 320px 1fr; gap: 16px; align-items: start; }
+    @media (max-width: 760px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* Cards */
+    .card { background: #fff; border: 0.5px solid #e0ddd8; border-radius: 12px; padding: 20px; }
+    .card-title { font-size: 11px; font-weight: 600; color: #6b6860; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .badge { background: #f0eeea; border: 0.5px solid #e0ddd8; border-radius: 20px; padding: 1px 8px; font-size: 11px; color: #6b6860; }
+
+    /* Buttons */
+    .btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #1a1916; color: #fff; }
+    .btn-secondary { background: #f0eeea; color: #1a1916; border: 0.5px solid #e0ddd8; }
+    .btn-danger { background: #fdf0ef; color: #c0392b; border: 0.5px solid #f5c6c2; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 20px; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Forms */
+    .form-section { margin-bottom: 16px; }
+    .form-section-title { font-size: 11px; font-weight: 600; color: #9c9990; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 0.5px solid #f0eeea; }
+    .form-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .form-group { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 100px; }
+    .form-group label { font-size: 11px; color: #6b6860; font-weight: 500; }
+    .form-group input, .form-group select { padding: 7px 10px; border: 0.5px solid #ccc9c3; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; background: #fff; color: #1a1916; }
+    .form-group input:focus, .form-group select:focus { border-color: #1a5fa8; }
+    .form-group.full { flex: 100%; min-width: 100%; }
+
+    /* Toggle tiles */
+    .checks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 6px; }
+    .check-tile { padding: 10px 12px; border: 1.5px solid #e0ddd8; border-radius: 10px; background: #fafafa; font-size: 13px; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; transition: border-color 0.15s, background 0.15s; }
+    .check-tile:hover { border-color: #aaa; }
+    .check-tile.checked { background: #edf6f1; border-color: #1a6b3a; color: #1a6b3a; font-weight: 500; }
+    .check-tile .tile-icon { font-size: 15px; flex-shrink: 0; }
+    .check-tile .tile-label { flex: 1; line-height: 1.3; }
+
+    /* Messages */
+    .msg-ok  { padding: 8px 12px; background: #edf6f1; border: 0.5px solid #a8d8ba; border-radius: 8px; color: #1a6b3a; font-size: 13px; margin-top: 8px; }
+    .msg-err { padding: 8px 12px; background: #fdf0ef; border: 0.5px solid #f5c6c2; border-radius: 8px; color: #c0392b; font-size: 13px; margin-top: 8px; }
+
+    /* Vehicle list */
+    .vehicle-list { display: flex; flex-direction: column; gap: 6px; }
+    .vehicle-item { padding: 10px 12px; border: 0.5px solid #e0ddd8; border-radius: 10px; cursor: pointer; background: #fff; transition: border-color 0.15s, background 0.15s; }
+    .vehicle-item:hover { border-color: #1a5fa8; background: #edf3fb; }
+    .vehicle-item.active { border-color: #1a5fa8; background: #edf3fb; }
+    .vi-title { font-weight: 600; font-size: 14px; }
+    .vi-meta { font-size: 11px; color: #9c9990; margin-top: 2px; }
+    .vi-next { font-size: 11px; color: #b85c00; margin-top: 3px; font-weight: 500; }
+
+    /* Detail view */
+    .detail-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .detail-title { font-size: 20px; font-weight: 700; }
+    .detail-meta { font-size: 12px; color: #6b6860; margin-top: 3px; }
+    .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 16px; }
+    .info-cell { background: #f5f4f0; border-radius: 8px; padding: 8px 12px; }
+    .info-cell-label { font-size: 10px; color: #9c9990; text-transform: uppercase; letter-spacing: 0.05em; }
+    .info-cell-value { font-size: 14px; font-weight: 600; margin-top: 2px; }
+
+    /* Service history */
+    .service-entry { border: 0.5px solid #e0ddd8; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+    .se-header { padding: 10px 14px; background: #f5f4f0; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .se-date { font-weight: 600; font-size: 14px; }
+    .se-km { font-size: 13px; color: #6b6860; }
+    .se-oil { font-size: 12px; color: #9c9990; margin-left: auto; }
+    .se-by { font-size: 11px; color: #9c9990; }
+    .se-body { padding: 12px 14px; border-top: 0.5px solid #e0ddd8; }
+    .se-checks { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+    .chip { padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .chip-yes { background: #edf6f1; color: #1a6b3a; border: 0.5px solid #a8d8ba; }
+    .chip-no  { background: #f5f4f0; color: #9c9990; border: 0.5px solid #e0ddd8; }
+    .chip-null { background: #fef9ec; color: #b85c00; border: 0.5px solid #f5cc99; }
+    .se-extra { font-size: 13px; color: #6b6860; margin-top: 6px; }
+    .se-next { font-size: 12px; font-weight: 500; color: #1a5fa8; margin-top: 6px; }
+
+    /* Add entry form */
+    .add-entry-section { margin-top: 16px; border-top: 0.5px solid #e0ddd8; padding-top: 16px; }
+    .add-entry-toggle { font-size: 13px; font-weight: 500; color: #1a5fa8; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; }
+
+    .empty { color: #9c9990; font-size: 13px; padding: 12px 0; }
+
+    .search-input { width: 100%; padding: 7px 10px; border: 0.5px solid #ccc9c3; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; margin-bottom: 10px; }
+    .search-input:focus { border-color: #1a5fa8; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">📋 Servisna knjižica</div>
+    <div class="header-sub">Digitalna evidencija servisne povijesti vozila</div>
+  </div>
+  <div class="header-links">
+    <a href="/chat.html">Chatbot</a>
+    <a href="/chat-admin.html">RAG Admin</a>
+    <a href="/index.html">Autoservis</a>
+    <a href="#" onclick="logout()" style="color:#c0392b;">Odjava</a>
+  </div>
+</div>
+
+<!-- Login -->
+<div id="loginScreen" class="login-page">
+  <div class="login-card">
+    <h2>🔒 Prijava</h2>
+    <p>Servisna knjižica dostupna je samo mehaničarima i adminima.</p>
+    <input type="password" id="adminKeyInput" placeholder="Admin ključ" onkeydown="if(event.key==='Enter')login()"/>
+    <button class="btn btn-primary" style="width:100%;margin-top:4px;" onclick="login()">Prijava</button>
+    <div id="loginErr" style="color:#c0392b;font-size:13px;margin-top:8px;"></div>
+  </div>
+</div>
+
+<!-- Main content -->
+<div id="mainContent" style="display:none;">
+  <div class="content">
+    <div class="two-col">
+
+      <!-- LEFT: vehicle list + add vehicle -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+
+        <!-- Vehicle list -->
+        <div class="card">
+          <div class="card-title">
+            Vozila
+            <span class="badge" id="vehicleCount">0</span>
+            <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="loadVehicles()">↻</button>
+          </div>
+          <input class="search-input" placeholder="Pretraži VIN, tablicu, vozilo..." oninput="filterVehicles(this.value)" />
+          <div class="vehicle-list" id="vehicleList">
+            <div class="empty">Učitavanje...</div>
+          </div>
+        </div>
+
+        <!-- Add vehicle form -->
+        <div class="card">
+          <div class="card-title">Dodaj vozilo</div>
+
+          <div class="form-section">
+            <div class="form-section-title">Vozilo</div>
+            <div class="form-row">
+              <div class="form-group"><label>Marka</label><input id="nv_make" placeholder="npr. Volkswagen"/></div>
+              <div class="form-group"><label>Model</label><input id="nv_model" placeholder="npr. Golf"/></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Godište</label><input id="nv_year" type="number" placeholder="npr. 2018"/></div>
+              <div class="form-group"><label>Motor (cm³)</label><input id="nv_cc" type="number" placeholder="npr. 1968"/></div>
+              <div class="form-group"><label>Snaga (kW)</label><input id="nv_kw" type="number" placeholder="npr. 110"/></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Identifikacija</div>
+            <div class="form-row">
+              <div class="form-group"><label>VIN</label><input id="nv_vin" placeholder="17 znakova" style="text-transform:uppercase;"/></div>
+              <div class="form-group"><label>Tablica</label><input id="nv_plate" placeholder="npr. ZG-123-AB" style="text-transform:uppercase;"/></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Vlasnik</div>
+            <div class="form-row">
+              <div class="form-group full"><label>Ime i prezime</label><input id="nv_owner_name" placeholder="npr. Ivan Horvat"/></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Telefon</label><input id="nv_owner_phone" placeholder="npr. +385 91 123 4567"/></div>
+              <div class="form-group"><label>Email</label><input id="nv_owner_email" placeholder="npr. ivan@mail.com"/></div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" onclick="addVehicle()">Dodaj vozilo</button>
+          <div id="addVehicleMsg" style="margin-top:8px;"></div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: detail view -->
+      <div class="card" id="detailPanel">
+        <div class="empty" style="padding:40px 0;text-align:center;color:#9c9990;">
+          ← Odaberi vozilo s liste
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const RAG_API = "/chat-api";
+  let ADMIN_KEY = "";
+  let allVehicles = [];
+  let selectedVin = null;
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  function login() {
+    const key = document.getElementById("adminKeyInput").value.trim();
+    if (!key) return;
+    ADMIN_KEY = key;
+    fetch(`${RAG_API}/service-book?admin_key=${encodeURIComponent(key)}`)
+      .then(r => {
+        if (r.ok) {
+          document.getElementById("loginScreen").style.display = "none";
+          document.getElementById("mainContent").style.display = "block";
+          loadVehicles();
+        } else {
+          document.getElementById("loginErr").textContent = "Nevažeći ključ.";
+        }
+      })
+      .catch(() => { document.getElementById("loginErr").textContent = "Ne mogu se spojiti na server."; });
+  }
+
+  function logout() {
+    ADMIN_KEY = "";
+    document.getElementById("mainContent").style.display = "none";
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("adminKeyInput").value = "";
+  }
+
+  // ── Vehicles list ─────────────────────────────────────────────────────────
+  async function loadVehicles() {
+    try {
+      const r = await fetch(`${RAG_API}/service-book?admin_key=${encodeURIComponent(ADMIN_KEY)}`);
+      const data = await r.json();
+      allVehicles = data.vehicles || [];
+      document.getElementById("vehicleCount").textContent = allVehicles.length;
+      renderVehicleList(allVehicles);
+      if (selectedVin) {
+        const current = allVehicles.find(v => v.vin === selectedVin);
+        if (current) renderDetail(current);
+      }
+    } catch (e) {
+      document.getElementById("vehicleList").innerHTML = `<div class="empty">Greška: ${e.message}</div>`;
+    }
+  }
+
+  function filterVehicles(q) {
+    q = q.toLowerCase();
+    const filtered = allVehicles.filter(v =>
+      v.vin.toLowerCase().includes(q) ||
+      v.plate.toLowerCase().includes(q) ||
+      v.vehicle.make.toLowerCase().includes(q) ||
+      v.vehicle.model.toLowerCase().includes(q) ||
+      (v.owner.name || "").toLowerCase().includes(q)
+    );
+    renderVehicleList(filtered);
+  }
+
+  function renderVehicleList(list) {
+    const el = document.getElementById("vehicleList");
+    if (!list.length) { el.innerHTML = `<div class="empty">Nema vozila.</div>`; return; }
+    el.innerHTML = list.map(v => {
+      const lastEntry = v.service_history && v.service_history.length
+        ? v.service_history[v.service_history.length - 1] : null;
+      return `
+        <div class="vehicle-item ${v.vin === selectedVin ? 'active' : ''}" onclick="selectVehicle('${v.vin}')">
+          <div class="vi-title">${esc(v.vehicle.make)} ${esc(v.vehicle.model)} <span style="font-weight:400;color:#9c9990;">${v.vehicle.year}</span></div>
+          <div class="vi-meta">${esc(v.plate)} · ${esc(v.vin)}</div>
+          <div class="vi-meta">${esc(v.owner.name || '—')}</div>
+          ${v.next_service_km ? `<div class="vi-next">Sljedeći servis: ${v.next_service_km.toLocaleString()} km</div>` : ''}
+        </div>`;
+    }).join("");
+  }
+
+  function selectVehicle(vin) {
+    selectedVin = vin;
+    const v = allVehicles.find(x => x.vin === vin);
+    if (v) renderDetail(v);
+    renderVehicleList(allVehicles);
+  }
+
+  // ── Add vehicle ───────────────────────────────────────────────────────────
+  async function addVehicle() {
+    const msgEl = document.getElementById("addVehicleMsg");
+    msgEl.innerHTML = "";
+    const make  = document.getElementById("nv_make").value.trim();
+    const model = document.getElementById("nv_model").value.trim();
+    const year  = parseInt(document.getElementById("nv_year").value);
+    const cc    = parseInt(document.getElementById("nv_cc").value) || null;
+    const kw    = parseInt(document.getElementById("nv_kw").value) || null;
+    const vin   = document.getElementById("nv_vin").value.trim().toUpperCase();
+    const plate = document.getElementById("nv_plate").value.trim().toUpperCase();
+    const owner_name  = document.getElementById("nv_owner_name").value.trim();
+    const owner_phone = document.getElementById("nv_owner_phone").value.trim();
+    const owner_email = document.getElementById("nv_owner_email").value.trim();
+
+    if (!make || !model || !year || !vin || !plate || !owner_name) {
+      msgEl.innerHTML = `<div class="msg-err">Popuni sva obavezna polja (marka, model, godište, VIN, tablica, vlasnik).</div>`;
+      return;
+    }
+
+    try {
+      const r = await fetch(`${RAG_API}/service-book?admin_key=${encodeURIComponent(ADMIN_KEY)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vin, plate,
+          vehicle: { make, model, year, engine_cc: cc, engine_kw: kw },
+          owner: { name: owner_name, phone: owner_phone, email: owner_email },
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) { msgEl.innerHTML = `<div class="msg-err">${data.detail || "Greška."}</div>`; return; }
+      msgEl.innerHTML = `<div class="msg-ok">Vozilo dodano!</div>`;
+      ["nv_make","nv_model","nv_year","nv_cc","nv_kw","nv_vin","nv_plate","nv_owner_name","nv_owner_phone","nv_owner_email"]
+        .forEach(id => { document.getElementById(id).value = ""; });
+      await loadVehicles();
+      selectVehicle(data.vin);
+    } catch (e) {
+      msgEl.innerHTML = `<div class="msg-err">Greška: ${e.message}</div>`;
+    }
+  }
+
+  // ── Detail view ───────────────────────────────────────────────────────────
+  function renderDetail(v) {
+    const history = [...(v.service_history || [])].reverse(); // najnoviji prvi
+    const panel = document.getElementById("detailPanel");
+
+    panel.innerHTML = `
+      <div class="detail-header">
+        <div>
+          <div class="detail-title">${esc(v.vehicle.make)} ${esc(v.vehicle.model)} ${v.vehicle.year}</div>
+          <div class="detail-meta">
+            VIN: <strong>${esc(v.vin)}</strong> · Tablica: <strong>${esc(v.plate)}</strong>
+          </div>
+        </div>
+        <div class="detail-actions">
+          <button class="btn btn-danger btn-sm" onclick="deleteVehicle('${v.vin}')">Obriši vozilo</button>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-cell"><div class="info-cell-label">Motor</div><div class="info-cell-value">${v.vehicle.engine_cc ? v.vehicle.engine_cc + ' cm³' : '—'}</div></div>
+        <div class="info-cell"><div class="info-cell-label">Snaga</div><div class="info-cell-value">${v.vehicle.engine_kw ? v.vehicle.engine_kw + ' kW' : '—'}</div></div>
+        <div class="info-cell"><div class="info-cell-label">Vlasnik</div><div class="info-cell-value">${esc(v.owner.name || '—')}</div></div>
+        <div class="info-cell"><div class="info-cell-label">Telefon</div><div class="info-cell-value" style="font-size:13px;">${esc(v.owner.phone || '—')}</div></div>
+        <div class="info-cell"><div class="info-cell-label">Email</div><div class="info-cell-value" style="font-size:12px;">${esc(v.owner.email || '—')}</div></div>
+        <div class="info-cell" style="background:#fef3e8;"><div class="info-cell-label">Sljedeći servis</div><div class="info-cell-value" style="color:#b85c00;">${v.next_service_km ? v.next_service_km.toLocaleString() + ' km' : '—'}</div></div>
+      </div>
+
+      <div class="card-title" style="margin-top:8px;">
+        Servisna povijest
+        <span class="badge">${history.length}</span>
+      </div>
+
+      ${history.length === 0
+        ? `<div class="empty">Nema servisnih zapisa. Dodaj prvi servis ispod.</div>`
+        : history.map(e => renderEntry(e, v.vin)).join("")
+      }
+
+      <!-- Add entry -->
+      <div class="add-entry-section">
+        <button class="add-entry-toggle" onclick="toggleAddEntry()">+ Dodaj servisni zapis</button>
+        <div id="addEntryForm" style="display:none;margin-top:14px;">
+          ${renderAddEntryForm(v.vin)}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderEntry(e, vin) {
+    const LABELS = {
+      oil_filter: "Filter ulja", cabin_filter: "Filter kabine", fuel_filter: "Filter goriva",
+      air_filter: "Filter zraka", spark_plug: "Svjećice", toothed_belt: "Zupcasti remen",
+      micro_belt: "Micro remen", brake_fluid: "Kočiona tekućina", coolant: "Rashladna tekućina",
+      gearbox_oil: "Ulje mjenjaća", power_steering_fluid: "Ulje servo upr.",
+    };
+    const items = e.items || {};
+    const done = Object.entries(LABELS).filter(([k]) => items[k] === true).map(([,l]) => `<span class="chip chip-yes">✓ ${l}</span>`);
+    const notDone = Object.entries(LABELS).filter(([k]) => items[k] === false).map(([,l]) => `<span class="chip chip-no">${l}</span>`);
+    const chips = [...done, ...notDone].join("") || `<span style="color:#9c9990;font-size:12px;">Nema označenih stavki</span>`;
+
+    return `
+      <div class="service-entry">
+        <div class="se-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+          <div class="se-date">${e.date}</div>
+          <div class="se-km">${(e.km).toLocaleString()} km</div>
+          ${e.oil_type ? `<div class="se-oil">${esc(e.oil_type)}</div>` : ''}
+          <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+            <div class="se-by">${esc(e.recorded_by || '—')}</div>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteEntry('${vin}','${e.date}',${e.km})">×</button>
+          </div>
+        </div>
+        <div class="se-body" style="display:none;">
+          <div class="se-checks">${chips}</div>
+          ${e.extra ? `<div class="se-extra">📝 ${esc(e.extra)}</div>` : ''}
+          ${e.next_service_km ? `<div class="se-next">Sljedeći servis: ${e.next_service_km.toLocaleString()} km</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function renderAddEntryForm(vin) {
+    const ITEMS = [
+      ["oil_filter","Filter ulja"], ["cabin_filter","Filter kabine"], ["fuel_filter","Filter goriva"],
+      ["air_filter","Filter zraka"], ["spark_plug","Svjećice"], ["toothed_belt","Zupčasti remen"],
+      ["micro_belt","Micro remen"], ["brake_fluid","Kočiona tekućina"], ["coolant","Rashladna tekućina"],
+      ["gearbox_oil","Ulje mjenjaća"], ["power_steering_fluid","Ulje servo upr."],
+    ];
+    const checksHtml = ITEMS.map(([key, label]) => `
+      <div class="check-tile" id="ei_${key}" onclick="toggleTile(this)">
+        <span class="tile-icon">○</span>
+        <span class="tile-label">${label}</span>
+      </div>`).join("");
+
+    return `
+      <div class="form-section">
+        <div class="form-section-title">Osnovni podaci</div>
+        <div class="form-row">
+          <div class="form-group"><label>Datum</label><input type="date" id="ei_date" value="${new Date().toISOString().slice(0,10)}"/></div>
+          <div class="form-group"><label>KM stanje</label><input type="number" id="ei_km" placeholder="npr. 82500"/></div>
+          <div class="form-group"><label>Vrsta ulja</label><input id="ei_oil" placeholder="npr. 5W/40"/></div>
+          <div class="form-group"><label>Upisao</label><input id="ei_recorded_by" placeholder="Ime mehaničara"/></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Obavljeni radovi</div>
+        <div class="checks-grid">${checksHtml}</div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Ostali radovi</div>
+        <div class="form-group full"><input id="ei_extra" placeholder="Npr. zamjena kočionih pločica, centriranje..."/></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn btn-primary" onclick="submitEntry('${vin}')">Spremi servisni zapis</button>
+        <button class="btn btn-secondary" onclick="toggleAddEntry()">Odustani</button>
+      </div>
+      <div id="addEntryMsg" style="margin-top:8px;"></div>
+    `;
+  }
+
+  function toggleAddEntry() {
+    const el = document.getElementById("addEntryForm");
+    if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+  }
+
+  async function submitEntry(vin) {
+    const msgEl = document.getElementById("addEntryMsg");
+    msgEl.innerHTML = "";
+
+    const date = document.getElementById("ei_date").value;
+    const km   = parseInt(document.getElementById("ei_km").value);
+    const oil  = document.getElementById("ei_oil").value.trim();
+    const recorded_by = document.getElementById("ei_recorded_by").value.trim();
+    const extra = document.getElementById("ei_extra").value.trim();
+
+    if (!date || isNaN(km)) {
+      msgEl.innerHTML = `<div class="msg-err">Datum i KM stanje su obavezni.</div>`;
+      return;
+    }
+
+    const ITEM_KEYS = ["oil_filter","cabin_filter","fuel_filter","air_filter","spark_plug",
+      "toothed_belt","micro_belt","brake_fluid","coolant","gearbox_oil","power_steering_fluid"];
+    const items = {};
+    ITEM_KEYS.forEach(key => {
+      const tile = document.getElementById(`ei_${key}`);
+      items[key] = tile ? tile.classList.contains("checked") : null;
+    });
+
+    try {
+      const r = await fetch(
+        `${RAG_API}/service-book/${encodeURIComponent(vin)}/entries?admin_key=${encodeURIComponent(ADMIN_KEY)}&recorded_by=${encodeURIComponent(recorded_by || 'unknown')}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date, km, oil_type: oil, items, extra }),
+        }
+      );
+      const data = await r.json();
+      if (!r.ok) { msgEl.innerHTML = `<div class="msg-err">${data.detail || "Greška."}</div>`; return; }
+      msgEl.innerHTML = `<div class="msg-ok">Servisni zapis dodan!</div>`;
+      await loadVehicles();
+    } catch (e) {
+      msgEl.innerHTML = `<div class="msg-err">Greška: ${e.message}</div>`;
+    }
+  }
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+  async function deleteVehicle(vin) {
+    if (!confirm(`Sigurno obrisati vozilo ${vin} i svu servisnu povijest?`)) return;
+    try {
+      const r = await fetch(`${RAG_API}/service-book/${encodeURIComponent(vin)}?admin_key=${encodeURIComponent(ADMIN_KEY)}`, { method: "DELETE" });
+      if (r.ok) { selectedVin = null; document.getElementById("detailPanel").innerHTML = `<div class="empty" style="padding:40px 0;text-align:center;">Vozilo obrisano.</div>`; await loadVehicles(); }
+      else { const d = await r.json(); alert(d.detail || "Greška pri brisanju."); }
+    } catch (e) { alert("Greška: " + e.message); }
+  }
+
+  async function deleteEntry(vin, date, km) {
+    if (!confirm(`Obrisati servisni zapis od ${date} (${km} km)?`)) return;
+    try {
+      const r = await fetch(
+        `${RAG_API}/service-book/${encodeURIComponent(vin)}/entries?admin_key=${encodeURIComponent(ADMIN_KEY)}`,
+        { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date, km }) }
+      );
+      if (r.ok) await loadVehicles();
+      else { const d = await r.json(); alert(d.detail || "Greška."); }
+    } catch (e) { alert("Greška: " + e.message); }
+  }
+
+  function toggleTile(el) {
+    const checked = el.classList.toggle("checked");
+    el.querySelector(".tile-icon").textContent = checked ? "✓" : "○";
+  }
+
+  function esc(s) {
+    return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+</script>
+</body>
+</html>
