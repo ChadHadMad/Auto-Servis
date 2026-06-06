@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ML Predikcija Servisa</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0f;
+      --surface: #141416;
+      --surface2: #1a1a1e;
+      --surface3: #222228;
+      --border: #2a2a32;
+      --text: #f0eff4;
+      --text2: #8887a0;
+      --text3: #4d4c60;
+      --accent: #7c6fcd;
+      --accent2: #a594f9;
+      --green: #4ade80;
+      --orange: #fb923c;
+      --red: #f87171;
+      --blue: #60a5fa;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .header-logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .header-title { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+    .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+    .header-links { display: flex; gap: 8px; }
+    .header-links a {
+      font-size: 12px; color: var(--text2); text-decoration: none;
+      padding: 6px 12px; border: 1px solid var(--border);
+      border-radius: 8px; transition: all 0.2s;
+    }
+    .header-links a:hover { color: var(--text); border-color: var(--accent); }
+
+    /* ── Login ── */
+    .login-wrap {
+      min-height: calc(100vh - 77px);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px;
+      width: 360px;
+      text-align: center;
+    }
+    .login-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .login-card p { color: var(--text2); font-size: 13px; margin-bottom: 24px; }
+    .login-card input {
+      width: 100%; padding: 12px 16px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 14px;
+      font-family: inherit; outline: none; margin-bottom: 12px;
+    }
+    .login-card input:focus { border-color: var(--accent); }
+    .btn-login {
+      width: 100%; padding: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; border-radius: 10px; color: white;
+      font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+
+    /* ── Dashboard ── */
+    .content { max-width: 1200px; margin: 0 auto; padding: 32px; }
+
+    /* Vehicle selector */
+    .vehicle-selector {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px;
+    }
+    .v-btn {
+      padding: 8px 16px; border: 1px solid var(--border);
+      background: var(--surface); border-radius: 10px;
+      color: var(--text2); cursor: pointer; font-family: inherit;
+      font-size: 13px; font-weight: 500; transition: all 0.2s;
+    }
+    .v-btn:hover { border-color: var(--accent); color: var(--text); }
+    .v-btn.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-color: transparent; color: white;
+    }
+
+    /* KM input */
+    .km-row {
+      display: flex; gap: 12px; align-items: flex-end; margin-bottom: 32px;
+    }
+    .km-group { display: flex; flex-direction: column; gap: 6px; }
+    .km-group label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.08em; }
+    .km-group input {
+      padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 14px;
+      font-family: 'Space Mono', monospace; outline: none; width: 200px;
+    }
+    .km-group input:focus { border-color: var(--accent); }
+    .btn-predict {
+      padding: 10px 20px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-predict:hover { border-color: var(--accent); background: var(--surface3); }
+
+    /* Main grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 11px; font-weight: 600; color: var(--text2);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 20px;
+    }
+
+    /* ── GAUGE ── */
+    .gauge-wrap {
+      display: flex; flex-direction: column; align-items: center; gap: 20px;
+    }
+    .gauge-svg { width: 280px; height: 160px; overflow: visible; }
+    .gauge-track { fill: none; stroke: var(--surface3); stroke-width: 20; stroke-linecap: round; }
+    .gauge-fill { fill: none; stroke-width: 20; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .gauge-center-text { text-anchor: middle; }
+
+    .gauge-stats {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; width: 100%;
+    }
+    .gauge-stat {
+      background: var(--surface2); border-radius: 10px; padding: 12px;
+      text-align: center;
+    }
+    .gs-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+    .gs-value { font-size: 18px; font-weight: 700; margin-top: 2px; font-family: 'Space Mono', monospace; }
+    .gs-value.green  { color: var(--green); }
+    .gs-value.orange { color: var(--orange); }
+    .gs-value.red    { color: var(--red); }
+    .gs-value.blue   { color: var(--blue); }
+
+    .status-badge {
+      width: 100%; padding: 10px 16px; border-radius: 10px;
+      text-align: center; font-weight: 600; font-size: 13px;
+    }
+    .status-badge.ok     { background: rgba(74, 222, 128, 0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+    .status-badge.soon   { background: rgba(251,146,60,0.1); color: var(--orange); border: 1px solid rgba(251,146,60,0.2); }
+    .status-badge.overdue { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+
+    /* ── MODEL INFO ── */
+    .model-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .chip {
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      font-family: 'Space Mono', monospace;
+    }
+    .chip-purple { background: rgba(124,111,205,0.15); color: var(--accent2); border: 1px solid rgba(124,111,205,0.3); }
+    .chip-green  { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+
+    .feature-bars { display: flex; flex-direction: column; gap: 8px; }
+    .fb-row { display: flex; align-items: center; gap: 10px; }
+    .fb-label { font-size: 12px; color: var(--text2); width: 140px; flex-shrink: 0; }
+    .fb-bar-wrap { flex: 1; height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+    .fb-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 1s ease; }
+    .fb-pct { font-size: 11px; color: var(--text3); width: 36px; text-align: right; font-family: 'Space Mono', monospace; }
+
+    /* ── LINE CHART ── */
+    .chart-wrap { position: relative; width: 100%; height: 220px; }
+    canvas { width: 100% !important; height: 100% !important; }
+
+    /* ── HISTORY TABLE ── */
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 8px;
+    }
+    .h-cell {
+      background: var(--surface2); border-radius: 10px; padding: 12px;
+      border: 1px solid var(--border); position: relative; overflow: hidden;
+    }
+    .h-cell::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+    .h-date { font-size: 10px; color: var(--text3); font-family: 'Space Mono', monospace; }
+    .h-km { font-size: 16px; font-weight: 700; margin: 4px 0; font-family: 'Space Mono', monospace; }
+    .h-oil { font-size: 11px; color: var(--text2); }
+    .h-interval { font-size: 10px; color: var(--accent2); margin-top: 4px; font-weight: 600; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+    .loading-dots::after { content: '...'; animation: dots 1.5s infinite; }
+    @keyframes dots { 0%,100%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+
+    .info-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .info-pill {
+      padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; font-size: 12px; color: var(--text2);
+    }
+    .info-pill span { color: var(--text); font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">🔮</div>
+    <div>
+      <div class="header-title">ML Predikcija Servisa</div>
+      <div class="header-sub">Gradient Boosting · R² 0.896 · MAE ±1153 km</div>
+    </div>
+  </div>
+  <div class="header-links">
+    <a href="/service-book.html">Servisna knjižica</a>
+    <a href="/chat-admin.html">RAG Admin</a>
+    <a href="/index.html">Autoservis</a>
+  </div>
+</div>
+
+<!-- Login -->
+<div id="loginWrap" class="login-wrap">
+  <div class="login-card">
+    <div style="font-size:40px;margin-bottom:16px;">🔮</div>
+    <h2>ML Dashboard</h2>
+    <p>Unesite admin ključ za pristup predikcijama servisa.</p>
+    <input type="password" id="adminKey" placeholder="Admin ključ" onkeydown="if(event.key==='Enter')login()"/>
+    <button class="btn-login" onclick="login()">Prijava</button>
+    <div id="loginErr" style="color:var(--red);font-size:12px;margin-top:10px;"></div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" style="display:none;">
+  <div class="content">
+
+    <!-- Vehicle selector -->
+    <div class="vehicle-selector" id="vehicleSelector">
+      <div style="color:var(--text2);font-size:13px;padding:8px;">Učitavanje vozila<span class="loading-dots"></span></div>
+    </div>
+
+    <!-- KM input -->
+    <div class="km-row">
+      <div class="km-group">
+        <label>Trenutni km (odometar)</label>
+        <input type="number" id="currentKm" placeholder="npr. 131077" oninput="onKmChange()"/>
+      </div>
+      <div class="km-group">
+        <label>Prosj. km/dan</label>
+        <input type="number" id="dailyKm" placeholder="auto" readonly
+          style="background:var(--surface3);cursor:not-allowed;opacity:0.8;"/>
+      </div>
+      <button class="btn-predict" onclick="runPrediction()">Izračunaj →</button>
+    </div>
+    <div id="dailyKmNote" style="font-size:12px;color:var(--text2);margin-bottom:20px;display:none;">
+      📊 Izračunato iz servisne povijesti: <span id="dailyKmDetail"></span>
+    </div>
+
+    <!-- Vehicle info pills -->
+    <div class="info-row" id="infoRow" style="display:none;"></div>
+
+    <!-- Main grid -->
+    <div class="main-grid" id="mainGrid" style="display:none;">
+
+      <!-- Gauge card -->
+      <div class="card">
+        <div class="card-title">Status servisa</div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 280 160" id="gaugeSvg">
+            <path class="gauge-track" d="M 30 150 A 110 110 0 0 1 250 150" />
+            <path class="gauge-fill" id="gaugeFill" d="M 30 150 A 110 110 0 0 1 250 150"
+              stroke="var(--green)"
+              stroke-dasharray="345"
+              stroke-dashoffset="345"/>
+            <text x="140" y="120" class="gauge-center-text" fill="var(--text)"
+              font-family="Space Mono" font-size="28" font-weight="700" id="gaugeKm">—</text>
+            <text x="140" y="142" class="gauge-center-text" fill="var(--text2)"
+              font-family="Space Grotesk" font-size="11" id="gaugeLabel">km do servisa</text>
+          </svg>
+
+          <div class="gauge-stats">
+            <div class="gauge-stat">
+              <div class="gs-label">Sljedeći servis</div>
+              <div class="gs-value blue" id="nextKm">—</div>
+            </div>
+            <div class="gauge-stat">
+              <div class="gs-label">Procij. datum</div>
+              <div class="gs-value" id="predDate" style="font-size:14px;">—</div>
+            </div>
+            <div class="gauge-stat">
+              <div class="gs-label">Dana do servisa</div>
+              <div class="gs-value" id="daysLeft">—</div>
+            </div>
+            <div class="gauge-stat">
+              <div class="gs-label">Interval (km)</div>
+              <div class="gs-value blue" id="intervalKm">—</div>
+            </div>
+          </div>
+
+          <div class="status-badge ok" id="statusBadge">— Odaberi vozilo —</div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- Line chart -->
+        <div class="card">
+          <div class="card-title">Servisni intervali kroz povijest</div>
+          <div class="chart-wrap">
+            <canvas id="lineChart"></canvas>
+          </div>
+          <div id="noChartData" style="text-align:center;color:var(--text3);padding:20px;font-size:13px;">
+            Nema dovoljno servisnih zapisa za grafikon (min. 2)
+          </div>
+        </div>
+
+        <!-- Model metrics -->
+        <div class="card">
+          <div class="card-title">Model info</div>
+          <div class="model-chips">
+            <div class="chip chip-purple">Gradient Boosting</div>
+            <div class="chip chip-green" id="chipR2">R² —</div>
+            <div class="chip chip-purple" id="chipMAE">MAE — km</div>
+          </div>
+          <div class="feature-bars" id="featureBars"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="card" id="historyCard" style="display:none;">
+      <div class="card-title">Servisna povijest</div>
+      <div class="history-grid" id="historyGrid"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+  const RAG_API = "/chat-api";
+  let ADMIN_KEY = "";
+  let vehicles = [];
+  let selectedVehicle = null;
+  let modelMetrics = {};
+  let lineChart = null;
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  function login() {
+    const key = document.getElementById("adminKey").value.trim();
+    if (!key) return;
+    ADMIN_KEY = key;
+    fetch(`${RAG_API}/ml/metrics?admin_key=${encodeURIComponent(key)}`)
+      .then(r => {
+        if (r.ok) return r.json();
+        document.getElementById("loginErr").textContent = "Nevažeći ključ.";
+        return null;
+      })
+      .then(data => {
+        if (!data) return;
+        modelMetrics = data;
+        document.getElementById("loginWrap").style.display = "none";
+        document.getElementById("dashboard").style.display = "block";
+        loadVehicles();
+        renderModelMetrics();
+      })
+      .catch(() => { document.getElementById("loginErr").textContent = "Ne mogu se spojiti."; });
+  }
+
+  // ── Vehicles ───────────────────────────────────────────────────────────────
+  async function loadVehicles() {
+    try {
+      const r = await fetch(`${RAG_API}/service-book?admin_key=${encodeURIComponent(ADMIN_KEY)}`);
+      const data = await r.json();
+      vehicles = data.vehicles || [];
+      renderVehicleSelector();
+    } catch (e) {
+      document.getElementById("vehicleSelector").innerHTML = `<div style="color:var(--red)">Greška: ${e.message}</div>`;
+    }
+  }
+
+  function renderVehicleSelector() {
+    const el = document.getElementById("vehicleSelector");
+    if (!vehicles.length) {
+      el.innerHTML = `<div style="color:var(--text3);font-size:13px;">Nema vozila u servisnoj knjižici. <a href="/service-book.html" style="color:var(--accent2);">Dodaj vozilo →</a></div>`;
+      return;
+    }
+    el.innerHTML = vehicles.map((v, i) =>
+      `<button class="v-btn${i===0?' active':''}" onclick="selectVehicle(${i}, this)">
+        ${esc(v.vehicle.make)} ${esc(v.vehicle.model)} <span style="opacity:0.6">${v.vehicle.year}</span>
+      </button>`
+    ).join("");
+    selectVehicle(0, el.children[0]);
+  }
+
+  function selectVehicle(idx, btn) {
+    selectedVehicle = vehicles[idx];
+    document.querySelectorAll(".v-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderVehicleInfo();
+    renderHistory();
+    calcDailyKm();
+    const km = document.getElementById("currentKm").value;
+    if (km) runPrediction();
+  }
+
+  function calcDailyKm() {
+    if (!selectedVehicle) return;
+    const history = [...(selectedVehicle.service_history || [])].sort((a, b) => a.km - b.km);
+    const noteEl   = document.getElementById("dailyKmNote");
+    const detailEl = document.getElementById("dailyKmDetail");
+    const dailyEl  = document.getElementById("dailyKm");
+
+    if (history.length < 2) {
+      dailyEl.value = "";
+      dailyEl.placeholder = "unesite rucno";
+      dailyEl.readOnly = false;
+      dailyEl.style.cursor = "text";
+      dailyEl.style.opacity = "1";
+      if (noteEl) noteEl.style.display = "none";
+      return;
+    }
+
+    // Weighted average — noviji intervali imaju vecu tezinu
+    let totalWeight = 0, weightedSum = 0;
+    let lastRate = null;
+    for (let i = 1; i < history.length; i++) {
+      const kmDiff = history[i].km - history[i-1].km;
+      const days = (new Date(history[i].date) - new Date(history[i-1].date)) / 86400000;
+      if (days > 0 && kmDiff > 0) {
+        const rate = kmDiff / days;
+        const w = Math.pow(2, i);
+        weightedSum += rate * w;
+        totalWeight += w;
+        lastRate = rate;
+      }
+    }
+    if (totalWeight === 0) return;
+
+    const avgDaily = Math.round(weightedSum / totalWeight);
+    dailyEl.value = avgDaily;
+    dailyEl.readOnly = true;
+    dailyEl.style.cursor = "not-allowed";
+    dailyEl.style.opacity = "0.8";
+    dailyEl.placeholder = "auto";
+
+    if (noteEl) {
+      noteEl.style.display = "block";
+      detailEl.textContent = avgDaily + " km/dan (weighted avg)" + (lastRate ? " · zadnji period: " + Math.round(lastRate) + " km/dan" : "");
+    }
+  }
+
+  function renderVehicleInfo() {
+    if (!selectedVehicle) return;
+    const v = selectedVehicle.vehicle;
+    const o = selectedVehicle.owner;
+    document.getElementById("infoRow").style.display = "flex";
+    document.getElementById("infoRow").innerHTML = [
+      `<div class="info-pill">Marka: <span>${esc(v.make)} ${esc(v.model)}</span></div>`,
+      `<div class="info-pill">Godište: <span>${v.year}</span></div>`,
+      v.engine_cc ? `<div class="info-pill">Motor: <span>${v.engine_cc} cm³</span></div>` : '',
+      v.engine_kw ? `<div class="info-pill">Snaga: <span>${v.engine_kw} kW</span></div>` : '',
+      o?.name ? `<div class="info-pill">Vlasnik: <span>${esc(o.name)}</span></div>` : '',
+    ].join("");
+  }
+
+  // ── Prediction ────────────────────────────────────────────────────────────
+  function onKmChange() {
+    const km = document.getElementById("currentKm").value;
+    if (km && selectedVehicle) runPrediction();
+  }
+
+  async function runPrediction() {
+    if (!selectedVehicle) return;
+    const currentKm = parseInt(document.getElementById("currentKm").value);
+    const dailyKm   = parseFloat(document.getElementById("dailyKm").value) || 40;
+    if (!currentKm) return;
+
+    try {
+      const r = await fetch(
+        `${RAG_API}/ml/predict/${encodeURIComponent(selectedVehicle.vin)}?admin_key=${encodeURIComponent(ADMIN_KEY)}&current_km=${currentKm}&avg_daily_km=${dailyKm}`
+      );
+      const data = await r.json();
+      renderGauge(data, currentKm);
+      document.getElementById("mainGrid").style.display = "grid";
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function renderGauge(data, currentKm) {
+    const interval = data.predicted_km_interval || 15000;
+    const nextKm   = currentKm + interval;
+    const remaining = interval;
+    const days     = data.days_until_service;
+    const predDate = data.predicted_date;
+
+    // Gauge fill — 0% = overdue, 100% = full interval remaining
+    const pct = Math.max(0, Math.min(1, remaining / interval));
+    const arcLen = 345;
+    const offset = arcLen - (pct * arcLen);
+
+    const fill = document.getElementById("gaugeFill");
+    fill.style.strokeDashoffset = offset;
+
+    let color = "var(--green)";
+    let status = "ok";
+    if (remaining <= 0)    { color = "var(--red)";    status = "overdue"; }
+    else if (remaining <= 1000) { color = "var(--orange)"; status = "soon"; }
+    fill.style.stroke = color;
+
+    // Center text
+    const kmDisplay = remaining >= 1000
+      ? Math.round(remaining/1000*10)/10 + "k"
+      : remaining.toLocaleString();
+    document.getElementById("gaugeKm").textContent = remaining <= 0 ? "!" : kmDisplay;
+    document.getElementById("gaugeLabel").textContent = remaining <= 0 ? "zakašnjelo" : "km do servisa";
+
+    // Stats
+    document.getElementById("nextKm").textContent = nextKm.toLocaleString();
+    document.getElementById("predDate").textContent = predDate
+      ? new Date(predDate).toLocaleDateString("hr-HR", {day:"2-digit",month:"2-digit",year:"numeric"})
+      : "—";
+
+    const daysEl = document.getElementById("daysLeft");
+    daysEl.textContent = days !== null && days !== undefined ? days + " d" : "—";
+    daysEl.className = "gs-value " + (days <= 0 ? "red" : days <= 30 ? "orange" : "green");
+
+    document.getElementById("intervalKm").textContent = interval.toLocaleString();
+
+    const badge = document.getElementById("statusBadge");
+    const msgs = { ok: "✅ Servis uredan", soon: "⚠️ Servis uskoro", overdue: "🔴 Servis zakašnjeo!" };
+    badge.className = `status-badge ${status}`;
+    badge.textContent = msgs[status];
+  }
+
+  // ── History & Chart ───────────────────────────────────────────────────────
+  function renderHistory() {
+    if (!selectedVehicle) return;
+    const history = [...(selectedVehicle.service_history || [])].sort((a, b) => a.km - b.km);
+
+    document.getElementById("historyCard").style.display = "block";
+    const grid = document.getElementById("historyGrid");
+
+    if (!history.length) {
+      grid.innerHTML = `<div style="color:var(--text3);font-size:13px;grid-column:1/-1;">Nema servisnih zapisa.</div>`;
+      renderLineChart([]);
+      return;
+    }
+
+    grid.innerHTML = history.map((e, i) => {
+      const interval = i > 0 ? e.km - history[i-1].km : null;
+      return `
+        <div class="h-cell">
+          <div class="h-date">${e.date}</div>
+          <div class="h-km">${e.km.toLocaleString()}</div>
+          <div class="h-oil">${esc(e.oil_type || '—')}</div>
+          ${interval ? `<div class="h-interval">+${interval.toLocaleString()} km</div>` : ''}
+        </div>`;
+    }).join("");
+
+    renderLineChart(history);
+  }
+
+  function renderLineChart(history) {
+    const canvas = document.getElementById("lineChart");
+    const noData = document.getElementById("noChartData");
+
+    if (lineChart) { lineChart.destroy(); lineChart = null; }
+
+    if (history.length < 2) {
+      canvas.style.display = "none";
+      noData.style.display = "block";
+      return;
+    }
+
+    canvas.style.display = "block";
+    noData.style.display = "none";
+
+    // Calculate intervals
+    const intervals = [];
+    for (let i = 1; i < history.length; i++) {
+      intervals.push({
+        label: history[i].date,
+        interval: history[i].km - history[i-1].km,
+        km: history[i].km,
+      });
+    }
+
+    const avgInterval = intervals.reduce((s, x) => s + x.interval, 0) / intervals.length;
+
+    lineChart = new Chart(canvas, {
+      type: "line",
+      data: {
+        labels: intervals.map(x => x.label),
+        datasets: [
+          {
+            label: "Interval (km)",
+            data: intervals.map(x => x.interval),
+            borderColor: "#a594f9",
+            backgroundColor: "rgba(165,148,249,0.1)",
+            borderWidth: 2,
+            pointBackgroundColor: "#a594f9",
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.3,
+            fill: true,
+          },
+          {
+            label: "Prosjek",
+            data: intervals.map(() => Math.round(avgInterval)),
+            borderColor: "rgba(74,222,128,0.5)",
+            borderWidth: 1.5,
+            borderDash: [6, 3],
+            pointRadius: 0,
+            tension: 0,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: "#8887a0", font: { family: "Space Grotesk", size: 12 }, boxWidth: 16 }
+          },
+          tooltip: {
+            backgroundColor: "#1a1a1e",
+            borderColor: "#2a2a32",
+            borderWidth: 1,
+            titleColor: "#f0eff4",
+            bodyColor: "#8887a0",
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()} km`
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: "#4d4c60", font: { family: "Space Mono", size: 10 } },
+            grid: { color: "#1a1a1e" }
+          },
+          y: {
+            ticks: {
+              color: "#4d4c60", font: { family: "Space Mono", size: 10 },
+              callback: v => v.toLocaleString()
+            },
+            grid: { color: "#222228" }
+          }
+        }
+      }
+    });
+  }
+
+  // ── Model metrics ─────────────────────────────────────────────────────────
+  function renderModelMetrics() {
+    document.getElementById("chipR2").textContent = `R² ${modelMetrics.r2 || "—"}`;
+    document.getElementById("chipMAE").textContent = `MAE ${modelMetrics.mae_km ? Math.round(modelMetrics.mae_km).toLocaleString() : "—"} km`;
+
+    const fi = modelMetrics.feature_importance || {};
+    const labels = {
+      brand_category: "Kategorija marke",
+      vehicle_age: "Starost vozila",
+      fuel_type: "Vrsta goriva",
+      total_km: "Ukupni km",
+      avg_daily_km: "Km/dan",
+      engine_cc: "Obujam motora",
+      engine_kw: "Snaga (kW)",
+      num_prev_services: "Br. servisa",
+      month: "Sezona",
+    };
+
+    const bars = document.getElementById("featureBars");
+    bars.innerHTML = Object.entries(fi)
+      .sort((a, b) => b[1] - a[1])
+      .map(([k, v]) => `
+        <div class="fb-row">
+          <div class="fb-label">${labels[k] || k}</div>
+          <div class="fb-bar-wrap">
+            <div class="fb-bar" style="width:${(v*100).toFixed(1)}%"></div>
+          </div>
+          <div class="fb-pct">${(v*100).toFixed(1)}%</div>
+        </div>`).join("");
+  }
+
+  function esc(s) {
+    return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+</script>
+</body>
+</html>

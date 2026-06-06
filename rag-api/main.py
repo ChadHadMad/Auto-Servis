@@ -1,12 +1,12 @@
 """
-main.py — RAG Chatbot API s Ollama (lokalni LLM, bez eksternih API-ja)
-+ Digitalna servisna knjižica (MongoDB)
+main.py — RAG Chatbot API s Ollama + ML predikcija servisa + MongoDB servisna knjižica
 """
 
 import os
 import shutil
 import tempfile
 from pathlib import Path
+from datetime import datetime as dt
 
 import httpx
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
@@ -25,6 +25,12 @@ from service_book import (
     update_vehicle, delete_vehicle,
     add_service_entry, delete_service_entry,
 )
+from ml_model import (
+    predict as ml_predict,
+    get_metrics as ml_get_metrics,
+    add_real_datapoint,
+    train as ml_train,
+)
 
 app = FastAPI(title="Autoservis RAG API", version="3.0.0")
 
@@ -39,7 +45,6 @@ ADMIN_KEY    = os.environ.get("ADMIN_KEY", "admin123")
 OLLAMA_URL   = os.environ.get("OLLAMA_URL", "http://ollama:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
 
-# HR → EN rječnik za query expansion
 HR_TO_EN = {
     "guma": "tire tyre flat puncture wheel",
     "pukla": "flat puncture burst",
@@ -76,14 +81,8 @@ HR_TO_EN = {
 
 def expand_query(query: str) -> str:
     q = query.lower()
-    expansions = []
-    for hr, en in HR_TO_EN.items():
-        if hr in q:
-            expansions.append(en)
-    if expansions:
-        return query + " " + " ".join(expansions)
-    return query
-
+    expansions = [en for hr, en in HR_TO_EN.items() if hr in q]
+    return query + " " + " ".join(expansions) if expansions else query
 
 SYSTEM_PROMPT = """You are a roadside assistant for {vehicle_info}. Always respond in {language}.
 
@@ -116,16 +115,24 @@ def startup():
     except Exception as e:
         print(f"[startup] MongoDB greška: {e}")
 
+    try:
+        ml_get_metrics()
+        print("[startup] ML model OK")
+    except Exception:
+        print("[startup] ML model nije treniran — treniram...")
+        try:
+            ml_train()
+            print("[startup] ML model treniran")
+        except Exception as e:
+            print(f"[startup] ML trening greška: {e}")
+
 
 async def ollama_chat(messages: list[dict], system: str) -> str:
     payload = {
         "model": OLLAMA_MODEL,
         "messages": [{"role": "system", "content": system}] + messages,
         "stream": False,
-        "options": {
-            "temperature": 0.1,
-            "num_predict": 600,
-        }
+        "options": {"temperature": 0.1, "num_predict": 600},
     }
     async with httpx.AsyncClient(timeout=300.0) as client:
         try:
@@ -133,16 +140,19 @@ async def ollama_chat(messages: list[dict], system: str) -> str:
             r.raise_for_status()
             return r.json()["message"]["content"]
         except httpx.TimeoutException:
-            raise HTTPException(status_code=504, detail="Ollama timeout — model se možda još učitava.")
+            raise HTTPException(status_code=504, detail="Ollama timeout.")
         except httpx.HTTPStatusError as e:
             raise HTTPException(status_code=502, detail=f"Ollama greška: {e.response.text}")
         except Exception as e:
             raise HTTPException(status_code=502, detail=f"Ollama nije dostupan: {str(e)}")
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# HEALTH
-# ═══════════════════════════════════════════════════════════════════════════════
+def require_service_auth(admin_key: str):
+    if admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=401, detail="Nevažeći ključ")
+
+
+# ── Health ────────────────────────────────────────────────────────────────────
 
 @app.get("/health")
 async def health():
@@ -153,17 +163,10 @@ async def health():
             ollama_ok = r.status_code == 200
     except Exception:
         pass
-    return {
-        "status": "ok",
-        "service": "rag-api",
-        "ollama": "ok" if ollama_ok else "nedostupan",
-        "model": OLLAMA_MODEL,
-    }
+    return {"status": "ok", "service": "rag-api", "ollama": "ok" if ollama_ok else "nedostupan", "model": OLLAMA_MODEL}
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# RAG — VEHICLES (Qdrant priručnici)
-# ═══════════════════════════════════════════════════════════════════════════════
+# ── RAG Vehicles ──────────────────────────────────────────────────────────────
 
 @app.get("/vehicles")
 def list_rag_vehicles():
@@ -183,20 +186,14 @@ async def upload_vehicle(
         raise HTTPException(status_code=401, detail="Nevažeći admin ključ")
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Samo PDF datoteke")
-
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         shutil.copyfileobj(file.file, tmp)
         tmp_path = tmp.name
-
     try:
         info = index_pdf(tmp_path, make, model, year, language)
     finally:
         Path(tmp_path).unlink(missing_ok=True)
-
-    return {
-        "message": f"Priručnik za {make} {model} {year} indeksiran",
-        "vehicle": info,
-    }
+    return {"message": f"Priručnik za {make} {model} {year} indeksiran", "vehicle": info}
 
 
 @app.delete("/vehicles/{key}")
@@ -207,9 +204,7 @@ def remove_rag_vehicle(key: str, admin_key: str):
     return {"message": f"Vozilo {key} obrisano"}
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# CHAT
-# ═══════════════════════════════════════════════════════════════════════════════
+# ── Chat ──────────────────────────────────────────────────────────────────────
 
 class ChatMessage(BaseModel):
     role: str
@@ -233,25 +228,16 @@ async def chat(req: ChatRequest):
 
     user_messages = [m for m in req.messages if m.role == "user"]
     last_query = user_messages[-1].content if user_messages else ""
-
     expanded_query = expand_query(last_query)
     results = search(req.vehicle_key, expanded_query, top_k=6)
-    context = "\n\n---\n\n".join(
-        f"[Stranica {r['page']}]\n{r['text']}" for r in results
-    ) if results else "Nema relevantnih dijelova priručnika."
+    context = "\n\n---\n\n".join(f"[Stranica {r['page']}]\n{r['text']}" for r in results) if results else "Nema relevantnih dijelova priručnika."
 
     vehicle_info = f"{vehicle['make']} {vehicle['model']} {vehicle['year']}"
-    system = SYSTEM_PROMPT.format(
-        vehicle_info=vehicle_info,
-        context=context,
-        language=req.language,
-    )
-
+    system = SYSTEM_PROMPT.format(vehicle_info=vehicle_info, context=context, language=req.language)
     ollama_messages = [{"role": m.role, "content": m.content} for m in req.messages]
     raw = await ollama_chat(ollama_messages, system)
 
     needs_dispatch = "[DISPATCH_NEEDED]" in raw
-
     location_from_reply = None
     if "[LOCATION:" in raw:
         try:
@@ -265,11 +251,8 @@ async def chat(req: ChatRequest):
     location = req.location or location_from_reply
     if location and needs_dispatch:
         dispatch = create_dispatch(
-            vehicle_key=req.vehicle_key,
-            vehicle_description=vehicle_info,
-            problem=req.problem_summary or last_query,
-            location=location,
-            contact=req.contact,
+            vehicle_key=req.vehicle_key, vehicle_description=vehicle_info,
+            problem=req.problem_summary or last_query, location=location, contact=req.contact,
         )
 
     clean = raw.replace("[DISPATCH_NEEDED]", "")
@@ -278,24 +261,20 @@ async def chat(req: ChatRequest):
     clean = clean.strip()
 
     return {
-        "reply": clean,
-        "needs_dispatch": needs_dispatch,
+        "reply": clean, "needs_dispatch": needs_dispatch,
         "dispatch_created": dispatch is not None,
         "dispatch_id": dispatch["id"] if dispatch else None,
         "sources": [{"page": r["page"], "score": r["score"]} for r in results],
     }
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# DISPATCHES
-# ═══════════════════════════════════════════════════════════════════════════════
+# ── Dispatches ────────────────────────────────────────────────────────────────
 
 @app.get("/dispatches")
 def get_dispatches(status: str | None = None, admin_key: str = ""):
     if admin_key != ADMIN_KEY:
         raise HTTPException(status_code=401, detail="Nevažeći admin ključ")
     return {"dispatches": list_dispatches(status)}
-
 
 class DispatchStatusUpdate(BaseModel):
     status: str
@@ -313,9 +292,7 @@ def update_dispatch(dispatch_id: str, payload: DispatchStatusUpdate):
     return updated
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# SERVICE BOOK — Pydantic modeli
-# ═══════════════════════════════════════════════════════════════════════════════
+# ── Service Book modeli ───────────────────────────────────────────────────────
 
 class VehicleInfo(BaseModel):
     make: str
@@ -343,20 +320,20 @@ class ServiceBookUpdate(BaseModel):
     next_service_km: Optional[int] = None
 
 class ServiceItems(BaseModel):
-    oil_filter:           Optional[bool] = None
-    cabin_filter:         Optional[bool] = None
-    fuel_filter:          Optional[bool] = None
-    air_filter:           Optional[bool] = None
-    spark_plug:           Optional[bool] = None
-    toothed_belt:         Optional[bool] = None
-    micro_belt:           Optional[bool] = None
-    brake_fluid:          Optional[bool] = None
-    coolant:              Optional[bool] = None
-    gearbox_oil:          Optional[bool] = None
+    oil_filter: Optional[bool] = None
+    cabin_filter: Optional[bool] = None
+    fuel_filter: Optional[bool] = None
+    air_filter: Optional[bool] = None
+    spark_plug: Optional[bool] = None
+    toothed_belt: Optional[bool] = None
+    micro_belt: Optional[bool] = None
+    brake_fluid: Optional[bool] = None
+    coolant: Optional[bool] = None
+    gearbox_oil: Optional[bool] = None
     power_steering_fluid: Optional[bool] = None
 
 class ServiceEntryCreate(BaseModel):
-    date: str                          # "YYYY-MM-DD"
+    date: str
     km: int
     oil_type: Optional[str] = ""
     items: ServiceItems = Field(default_factory=ServiceItems)
@@ -366,29 +343,13 @@ class ServiceEntryDelete(BaseModel):
     date: str
     km: int
 
-# Auth header helper — koristimo isti ADMIN_KEY sustav + "role" header
-# U stvarnoj prod verziji ovo bi bio JWT iz glavnog API-ja,
-# ali ovdje koristimo jednostavan pristup: admin_key za admina,
-# mechanic_key za mehaničare (isti key s dodatnim "role" parametrom)
 
-def require_service_auth(admin_key: str, role: str = ""):
-    """
-    Dozvoljava pristup ako je admin_key ispravan.
-    role se sprema uz zapis (tko je upisao).
-    """
-    if admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=401, detail="Nevažeći ključ")
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# SERVICE BOOK — Endpointi
-# ═══════════════════════════════════════════════════════════════════════════════
+# ── Service Book endpointi ────────────────────────────────────────────────────
 
 @app.get("/service-book")
 def sb_list(admin_key: str = ""):
     require_service_auth(admin_key)
     return {"vehicles": list_vehicles()}
-
 
 @app.get("/service-book/{vin}")
 def sb_get(vin: str, admin_key: str = ""):
@@ -398,7 +359,6 @@ def sb_get(vin: str, admin_key: str = ""):
         raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
     return doc
 
-
 @app.get("/service-book/plate/{plate}")
 def sb_get_by_plate(plate: str, admin_key: str = ""):
     require_service_auth(admin_key)
@@ -406,7 +366,6 @@ def sb_get_by_plate(plate: str, admin_key: str = ""):
     if not doc:
         raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
     return doc
-
 
 @app.post("/service-book", status_code=201)
 def sb_create(payload: ServiceBookCreate, admin_key: str = ""):
@@ -416,7 +375,6 @@ def sb_create(payload: ServiceBookCreate, admin_key: str = ""):
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
     return doc
-
 
 @app.put("/service-book/{vin}")
 def sb_update(vin: str, payload: ServiceBookUpdate, admin_key: str = ""):
@@ -429,7 +387,6 @@ def sb_update(vin: str, payload: ServiceBookUpdate, admin_key: str = ""):
         raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
     return doc
 
-
 @app.delete("/service-book/{vin}")
 def sb_delete(vin: str, admin_key: str = ""):
     require_service_auth(admin_key)
@@ -438,20 +395,47 @@ def sb_delete(vin: str, admin_key: str = ""):
         raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
     return {"message": f"Vozilo {vin} obrisano"}
 
-
 @app.post("/service-book/{vin}/entries")
-def sb_add_entry(
-    vin: str,
-    payload: ServiceEntryCreate,
-    admin_key: str = "",
-    recorded_by: str = "unknown",
-):
+def sb_add_entry(vin: str, payload: ServiceEntryCreate, admin_key: str = "", recorded_by: str = "unknown"):
     require_service_auth(admin_key)
+
+    vehicle = get_vehicle_by_vin(vin)
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
+
+    history = vehicle.get("service_history", [])
+
+    # Auto ML fine-tune — kad postoji prethodni zapis
+    if len(history) >= 1:
+        prev = history[-1]
+        actual_interval = payload.km - prev["km"]
+        if actual_interval > 1000:
+            v = vehicle["vehicle"]
+            try:
+                prev_date = dt.strptime(prev["date"], "%Y-%m-%d")
+                curr_date = dt.strptime(payload.date, "%Y-%m-%d")
+                days = (curr_date - prev_date).days
+                avg_daily = actual_interval / days if days > 0 else 40.0
+            except Exception:
+                avg_daily = 40.0
+
+            fuel_type = "diesel" if any(x in (v.get("model") or "").lower()
+                                        for x in ["tdi", "cdi", "dci", "crdi", "hdi"]) else "petrol"
+            try:
+                n_real = add_real_datapoint(
+                    brand=v["make"], fuel_type=fuel_type, year=v["year"],
+                    engine_cc=v.get("engine_cc") or 1600, engine_kw=v.get("engine_kw") or 85,
+                    total_km_at_service=payload.km, avg_daily_km=round(avg_daily, 1),
+                    num_prev_services=len(history), actual_km_interval=actual_interval,
+                )
+                print(f"[ml] Real datapoint added. Total: {n_real}")
+            except Exception as e:
+                print(f"[ml] Fine-tune greška: {e}")
+
     doc = add_service_entry(vin, payload.model_dump(), recorded_by)
     if not doc:
         raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
     return doc
-
 
 @app.delete("/service-book/{vin}/entries")
 def sb_delete_entry(vin: str, payload: ServiceEntryDelete, admin_key: str = ""):
@@ -460,3 +444,61 @@ def sb_delete_entry(vin: str, payload: ServiceEntryDelete, admin_key: str = ""):
     if not doc:
         raise HTTPException(status_code=404, detail="Vozilo ili zapis nije pronađen")
     return doc
+
+
+# ── ML Predikcija ─────────────────────────────────────────────────────────────
+
+class MLPredictRequest(BaseModel):
+    brand: str
+    fuel_type: str
+    year: int
+    engine_cc: int
+    engine_kw: int
+    total_km: int
+    avg_daily_km: float
+    num_prev_services: int = 0
+    month: int | None = None
+
+
+@app.post("/ml/predict")
+def ml_predict_endpoint(payload: MLPredictRequest, admin_key: str = ""):
+    require_service_auth(admin_key)
+    return ml_predict(
+        brand=payload.brand, fuel_type=payload.fuel_type, year=payload.year,
+        engine_cc=payload.engine_cc, engine_kw=payload.engine_kw,
+        total_km=payload.total_km, avg_daily_km=payload.avg_daily_km,
+        num_prev_services=payload.num_prev_services, month=payload.month,
+    )
+
+
+@app.post("/ml/predict/{vin}")
+def ml_predict_for_vehicle(vin: str, current_km: int, avg_daily_km: float, admin_key: str = ""):
+    require_service_auth(admin_key)
+    vehicle = get_vehicle_by_vin(vin)
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
+    v = vehicle["vehicle"]
+    history = vehicle.get("service_history", [])
+    fuel_type = "diesel" if any(x in (v.get("model") or "").lower()
+                                for x in ["tdi", "cdi", "dci", "crdi", "hdi"]) else "petrol"
+    result = ml_predict(
+        brand=v["make"], fuel_type=fuel_type, year=v["year"],
+        engine_cc=v.get("engine_cc") or 1600, engine_kw=v.get("engine_kw") or 85,
+        total_km=current_km, avg_daily_km=avg_daily_km, num_prev_services=len(history),
+    )
+    result["vin"] = vin
+    result["vehicle"] = f"{v['make']} {v['model']} {v['year']}"
+    return result
+
+
+@app.get("/ml/metrics")
+def ml_metrics_endpoint(admin_key: str = ""):
+    require_service_auth(admin_key)
+    return ml_get_metrics()
+
+
+@app.post("/ml/retrain")
+def ml_retrain_endpoint(admin_key: str = ""):
+    require_service_auth(admin_key)
+    metrics = ml_train()
+    return {"message": "Model uspješno retreniran", "metrics": metrics}
