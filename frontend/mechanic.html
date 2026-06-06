@@ -5,217 +5,126 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Autoservis – Mehaničar</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px auto; max-width: 1250px; }
-    header { display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; }
-    .pill { font-size: 12px; padding: 6px 10px; border-radius: 999px; background:#f2f2f2; }
-    .row { display:flex; gap: 18px; flex-wrap: wrap; }
-    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; flex: 1; }
-    button { padding: 8px 10px; border: 0; border-radius: 6px; cursor: pointer; }
-    button.secondary { background: #eee; }
-    select { padding: 6px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 14px; }
-    th, td { border: 1px solid #ccc; padding: 8px; }
-    th { background: #eee; }
-    .msg { margin-top: 10px; white-space: pre-wrap; }
-    .ok { color: #0a7a0a; }
-    .err { color: #b00020; }
-    .muted { color: #666; font-size: 12px; }
-    .status-created { color:#444; }
-    .status-in_progress { color:#0b5ed7; font-weight:600; }
-    .status-finished { color:#0a7a0a; font-weight:600; }
-    .status-cancelled { color:#b00020; font-weight:600; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1916; font-size: 14px; }
+
+    .page { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+    .page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+    .page-sub { font-size: 12px; color: #6b6860; margin-top: 2px; }
+    .whoami { font-size: 12px; padding: 4px 12px; border-radius: 20px; background: #f0eeea; border: 0.5px solid #e0ddd8; color: #6b6860; }
+
+    .card { background: #fff; border: 0.5px solid #e0ddd8; border-radius: 14px; padding: 22px; }
+    .card-title { font-size: 11px; font-weight: 700; color: #6b6860; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+
+    .btn { padding: 7px 14px; border-radius: 8px; border: none; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+    .btn:hover { opacity: 0.85; }
+    .btn-secondary { background: #f0eeea; color: #1a1916; border: 0.5px solid #e0ddd8; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; font-size: 11px; color: #9c9990; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 8px 8px 0; border-bottom: 0.5px solid #e0ddd8; }
+    td { padding: 10px 8px 10px 0; border-bottom: 0.5px solid #f0eeea; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+
+    .status-scheduled { color:#444; }
+    .status-waiting   { color:#1a5fa8; font-weight:600; }
+    .status-on_lift   { color:#b85c00; font-weight:600; }
+    .status-done      { color:#1a6b3a; font-weight:600; }
+    .status-cancelled { color:#c0392b; font-weight:600; }
+
+    select.inline { padding: 5px 8px; font-size: 12px; border: 0.5px solid #ccc9c3; border-radius: 6px; font-family: inherit; outline: none; }
+    select.inline:focus { border-color: #1a1916; }
+
+    .msg { margin-top: 12px; font-size: 13px; padding: 8px 12px; border-radius: 8px; }
+    .msg-ok  { background: #edf6f1; border: 0.5px solid #a8d8ba; color: #1a6b3a; }
+    .msg-err { background: #fdf0ef; border: 0.5px solid #f5c6c2; color: #c0392b; }
+    .muted { font-size: 12px; color: #9c9990; }
   </style>
 </head>
 <body>
-
-<header>
-  <div>
-    <h1>Mehaničarski panel</h1>
-    <div class="muted">Mehaničar vidi sve narudžbe i mijenja statuse.</div>
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Mehaničarski panel</div>
+      <div class="page-sub">Pregled i ažuriranje statusa svih narudžbi</div>
+    </div>
+    <span class="whoami" id="whoami">…</span>
   </div>
-  <div>
-    <span class="pill" id="whoami">...</span>
-    <button class="secondary" onclick="logout()">Odjava</button>
+
+  <div class="card">
+    <div class="card-title">
+      Sve narudžbe
+      <button class="btn btn-secondary" onclick="loadOrders()">↻ Osvježi</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Klijent</th><th>Vozilo</th><th>Datum</th><th>Bilješke</th><th>Status</th><th>Promijeni</th>
+        </tr>
+      </thead>
+      <tbody id="ordersTbody">
+        <tr><td colspan="6" class="muted">Učitavam…</td></tr>
+      </tbody>
+    </table>
+    <div id="ordersMsg"></div>
   </div>
-</header>
-
-<div class="card">
-  <h2>Sve narudžbe</h2>
-
-  <button class="secondary" onclick="loadOrders()">Osvježi</button>
-
-  <table>
-    <thead>
-      <tr>
-          <th>ID</th>
-          <th>Klijent</th>
-          <th>Vozilo</th>
-          <th>Datum</th>
-          <th>Bilješke</th>
-          <th>Status</th>
-          <th>Promijeni status</th>
-      </tr>
-    </thead>
-    <tbody id="ordersTbody">
-      <tr><td colspan="7" class="muted">Učitavam...</td></tr>
-    </tbody>
-  </table>
-
-  <div id="ordersMsg" class="msg"></div>
 </div>
 
 <script>
   const API = "/api";
+  const token = () => localStorage.getItem("token");
+  const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
-  function token() {
-    return localStorage.getItem("token");
-  }
-  function role() {
-    return localStorage.getItem("role");
-  }
-  function logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    window.location.href = "/index.html";
-  }
-  function setMsg(el, text, ok=false) {
+  const STATUS_LABELS = { scheduled:"Auto mora doći", waiting:"Čeka u servisu", on_lift:"Na dizalici", done:"Gotovo", cancelled:"Otkazano" };
+  const statusLabel = s => STATUS_LABELS[s] || s;
+  const statusOptions = cur => ["scheduled","waiting","on_lift","done","cancelled"]
+    .map(s=>`<option value="${s}" ${s===cur?"selected":""}>${statusLabel(s)}</option>`).join("");
+
+  function setMsg(text, ok) {
+    const el = document.getElementById("ordersMsg");
     el.textContent = text;
-    el.className = "msg " + (ok ? "ok" : "err");
-  }
-
-  async function loadMe() {
-    const pill = document.getElementById("whoami");
-    try {
-      const res = await fetch(`${API}/auth/me`, {
-        headers: { "Authorization": "Bearer " + token() }
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        pill.textContent = "Nevažeća prijava";
-        return;
-      }
-      pill.textContent = `${data.email} (${data.role})`;
-    } catch {
-      pill.textContent = "Greška";
-    }
-  }
-
-  function statusLabel(s) {
-    const map = {
-      scheduled: "Vozilo mora doći",
-      waiting: "Vozilo čeka",
-      on_lift: "Na dizalici",
-      done: "Gotovo",
-      cancelled: "Otkazano",
-    };
-    return map[s] || s;
-  }
-
-  async function loadOrders() {
-    const tbody = document.getElementById("ordersTbody");
-    const msgEl = document.getElementById("ordersMsg");
-    msgEl.textContent = "";
-
-    try {
-      const res = await fetch(`${API}/orders`, {
-        headers: { "Authorization": "Bearer " + token() }
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Ne mogu dohvatiti narudžbe.");
-        return;
-      }
-
-      if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="muted">Nema narudžbi.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = data.map(o => {
-        const notesShort = (o.notes || "").trim();
-        const display = notesShort.length > 40 ? notesShort.slice(0, 40) + "…" : notesShort;
-
-        return `
-          <tr>
-            <td style="font-size:12px">${o.id}</td>
-            <td>${escapeHtml(o.customer_name)}</td>
-            <td>${escapeHtml(o.vehicle)}</td>
-            <td>${escapeHtml(o.service_date)}</td>
-            <td title="${escapeHtml(notesShort)}">${escapeHtml(display || "-")}</td>
-            <td class="status-${o.status}">${escapeHtml(statusLabel(o.status))}</td>
-            <td>
-              <select onchange="updateStatus('${o.id}', this.value)">
-                ${statusOptions(o.status)}
-              </select>
-            </td>
-          </tr>
-        `;
-      }).join("");
-
-
-    } catch (e) {
-      setMsg(msgEl, "Greška: " + e);
-    }
-  }
-
-  function statusOptions(current) {
-    const all = ["scheduled", "waiting", "on_lift", "done", "cancelled"];
-    return all.map(s =>
-      `<option value="${s}" ${s === current ? "selected" : ""}>${statusLabel(s)}</option>`
-    ).join("");
-  }
-
-
-  async function updateStatus(orderId, newStatus) {
-    const msgEl = document.getElementById("ordersMsg");
-    msgEl.textContent = "";
-
-    try {
-      const res = await fetch(`${API}/orders/${orderId}/status?status=${newStatus}`, {
-        method: "PUT",
-        headers: { "Authorization": "Bearer " + token() }
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješna promjena statusa.");
-        return;
-      }
-
-      setMsg(msgEl, `Status promijenjen u "${newStatus}".`, true);
-      loadOrders();
-    } catch (e) {
-      setMsg(msgEl, "Greška: " + e);
-    }
-  }
-
-  function escapeHtml(s) {
-    return String(s)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+    el.className = "msg " + (ok ? "msg-ok" : "msg-err");
   }
 
   (function init() {
-    const t = token();
-    const r = role();
-
-    if (!t || !r) {
-      window.location.href = "/index.html";
-      return;
-    }
-    if (r !== "mechanic") {
-      window.location.href = "/dashboard.html";
-      return;
-    }
-
-    loadMe();
-    loadOrders();
+    const t = token(), r = localStorage.getItem("role");
+    if (!t || !r) { window.location.href = "/index.html"; return; }
+    if (r !== "mechanic") { window.location.href = "/dashboard.html"; return; }
+    loadMe(); loadOrders();
   })();
-</script>
 
+  async function loadMe() {
+    const r = await fetch(`${API}/auth/me`, { headers: { "Authorization": "Bearer " + token() } });
+    const d = await r.json();
+    document.getElementById("whoami").textContent = d.email + " (" + d.role + ")";
+  }
+
+  async function loadOrders() {
+    const r = await fetch(`${API}/orders`, { headers: { "Authorization": "Bearer " + token() } });
+    const data = await r.json();
+    if (!r.ok) { setMsg(JSON.stringify(data?.detail)); return; }
+    const tbody = document.getElementById("ordersTbody");
+    if (!data.length) { tbody.innerHTML = `<tr><td colspan="6" class="muted">Nema narudžbi.</td></tr>`; return; }
+    tbody.innerHTML = data.map(o => {
+      const notes = (o.notes||"").slice(0,40) + ((o.notes||"").length>40?"…":"");
+      return `<tr>
+        <td>${esc(o.customer_name)}</td>
+        <td>${esc(o.vehicle)}</td>
+        <td style="white-space:nowrap;">${o.service_date}</td>
+        <td title="${esc(o.notes||"")}">${esc(notes||"—")}</td>
+        <td class="status-${o.status}">${statusLabel(o.status)}</td>
+        <td><select class="inline" onchange="updateStatus('${o.id}',this.value)">${statusOptions(o.status)}</select></td>
+      </tr>`;
+    }).join("");
+  }
+
+  async function updateStatus(id, status) {
+    const r = await fetch(`${API}/orders/${id}/status?status=${status}`, { method:"PUT", headers:{"Authorization":"Bearer "+token()} });
+    const d = await r.json();
+    setMsg(r.ok ? `Status → "${statusLabel(status)}"` : `Greška: ${JSON.stringify(d?.detail)}`, r.ok);
+    if (r.ok) loadOrders();
+  }
+</script>
+<script src="/nav.js"></script>
 </body>
 </html>

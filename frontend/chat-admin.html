@@ -7,15 +7,7 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1916; font-size: 14px; }
-
-    .header { background: #fff; border-bottom: 0.5px solid #e0ddd8; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
-    .header-title { font-size: 16px; font-weight: 600; }
-    .header-sub { font-size: 12px; color: #6b6860; }
-    .header-links { display: flex; gap: 12px; align-items: center; }
-    .header-links a { font-size: 13px; color: #6b6860; text-decoration: none; }
-    .header-links a:hover { color: #1a1916; }
-
-    .login-page { min-height: calc(100vh - 55px); display: flex; align-items: center; justify-content: center; }
+    .login-page { min-height: 80vh; display: flex; align-items: center; justify-content: center; }
     .login-card { background: #fff; border: 0.5px solid #e0ddd8; border-radius: 12px; padding: 28px; width: 340px; }
     .login-card h2 { font-size: 18px; margin-bottom: 6px; }
     .login-card p { color: #6b6860; font-size: 13px; margin-bottom: 16px; }
@@ -23,74 +15,46 @@
     .login-card input:focus { border-color: #1a5fa8; }
     .btn-primary { width: 100%; padding: 10px; background: #1a1916; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; }
     .btn-primary:hover { opacity: 0.85; }
-
     .content { max-width: 960px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; gap: 16px; }
-
     .card { background: #fff; border: 0.5px solid #e0ddd8; border-radius: 12px; padding: 20px; }
     .card-title { font-size: 12px; font-weight: 500; color: #6b6860; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     .badge { background: #f0eeea; border: 0.5px solid #e0ddd8; border-radius: 20px; padding: 1px 8px; font-size: 11px; color: #6b6860; }
-
     .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
     .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
     .form-group label { font-size: 11px; color: #6b6860; font-weight: 500; }
     .form-group input, .form-group select { padding: 7px 10px; border: 0.5px solid #ccc9c3; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; background: #fff; color: #1a1916; }
     .form-group input:focus, .form-group select:focus { border-color: #1a5fa8; }
     .file-name { font-size: 11px; color: #6b6860; margin-top: 3px; }
-
     .upload-btn { padding: 9px 18px; background: #1a1916; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; margin-top: 10px; }
     .upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
     .progress { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #6b6860; margin-top: 8px; padding: 8px 12px; background: #fef9ec; border: 0.5px solid #f0d58a; border-radius: 8px; }
     .spinner { width: 13px; height: 13px; border: 2px solid #ccc; border-top-color: #6b6860; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
     .msg-ok { padding: 8px 12px; background: #edf6f1; border: 0.5px solid #a8d8ba; border-radius: 8px; color: #1a6b3a; font-size: 13px; margin-top: 8px; }
     .msg-err { padding: 8px 12px; background: #fdf0ef; border: 0.5px solid #f5c6c2; border-radius: 8px; color: #c0392b; font-size: 13px; margin-top: 8px; }
-
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th { text-align: left; font-size: 11px; color: #9c9990; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; padding: 0 8px 8px 0; border-bottom: 0.5px solid #e0ddd8; }
     td { padding: 10px 8px 10px 0; border-bottom: 0.5px solid #e0ddd8; vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     code { font-family: monospace; font-size: 11px; background: #f0eeea; padding: 2px 5px; border-radius: 4px; color: #6b6860; }
-
     .delete-btn { font-size: 12px; padding: 3px 9px; border: 0.5px solid #f5c6c2; background: #fdf0ef; color: #c0392b; border-radius: 20px; cursor: pointer; font-family: inherit; }
     .delete-btn:hover { opacity: 0.8; }
-
     .empty { font-size: 13px; color: #9c9990; padding: 8px 0; }
-
-    /* Dispatch table */
     .status-pending { color: #b85c00; font-weight: 500; }
     .status-assigned { color: #1a5fa8; font-weight: 500; }
     .status-resolved { color: #1a6b3a; font-weight: 500; }
-
     .status-select { padding: 4px 8px; border: 0.5px solid #ccc9c3; border-radius: 20px; font-size: 12px; font-family: inherit; cursor: pointer; background: #fff; color: #1a1916; outline: none; }
-
     .refresh-btn { font-size: 12px; padding: 4px 10px; border: 0.5px solid #e0ddd8; background: #f0eeea; border-radius: 20px; cursor: pointer; font-family: inherit; color: #6b6860; }
     .refresh-btn:hover { color: #1a1916; }
-
     .tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 0.5px solid #e0ddd8; padding-bottom: 10px; }
     .tab { font-size: 12px; padding: 4px 12px; border: 0.5px solid #e0ddd8; border-radius: 20px; cursor: pointer; background: #fff; color: #6b6860; font-family: inherit; }
     .tab.active { background: #1a1916; color: #fff; border-color: #1a1916; }
-
     .location-cell { max-width: 180px; word-break: break-word; }
     .problem-cell { max-width: 200px; word-break: break-word; color: #6b6860; }
   </style>
 </head>
 <body>
 
-<div class="header">
-  <div>
-    <div class="header-title">RAG Admin Panel</div>
-    <div class="header-sub">Upravljanje priručnicima i zahtjevima za tehničare</div>
-  </div>
-  <div class="header-links">
-    <a href="/chat.html">← Chatbot</a>
-    <a href="/index.html">Autoservis →</a>
-    <a href="#" onclick="logout()" style="color:#c0392b;">Odjava</a>
-  </div>
-</div>
-
-<!-- Login screen -->
 <div id="loginScreen" class="login-page">
   <div class="login-card">
     <h2>🔒 Admin pristup</h2>
@@ -101,165 +65,116 @@
   </div>
 </div>
 
-<!-- Admin content -->
 <div id="adminContent" style="display:none;">
   <div class="content">
-
-    <!-- Dispatch zahtjevi -->
     <div class="card">
       <div class="card-title">
         Zahtjevi za tehničare
         <span class="badge" id="dispatchCount">0</span>
         <button class="refresh-btn" onclick="loadDispatches()" style="margin-left:auto;">↻ Osvježi</button>
       </div>
-
       <div class="tabs">
         <button class="tab active" onclick="filterDispatches('all', this)">Svi</button>
         <button class="tab" onclick="filterDispatches('pending', this)">Na čekanju</button>
         <button class="tab" onclick="filterDispatches('assigned', this)">Dodijeljeni</button>
         <button class="tab" onclick="filterDispatches('resolved', this)">Riješeni</button>
       </div>
-
       <table>
-        <thead>
-          <tr>
-            <th>Vozilo</th>
-            <th>Problem</th>
-            <th>Lokacija</th>
-            <th>Kontakt</th>
-            <th>Prijavljeno</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="dispatchTbody">
-          <tr><td colspan="6" class="empty">Učitavanje...</td></tr>
-        </tbody>
+        <thead><tr><th>Vozilo</th><th>Problem</th><th>Lokacija / Kontakt</th><th>Prijavljeno</th><th>Status</th></tr></thead>
+        <tbody id="dispatchTbody"><tr><td colspan="5" class="empty">Učitavanje...</td></tr></tbody>
       </table>
     </div>
 
-    <!-- Upload priručnika -->
     <div class="card">
       <div class="card-title">Dodaj priručnik vozila</div>
-
       <div class="form-row">
-        <div class="form-group">
-          <label>Marka</label>
-          <input id="make" placeholder="npr. Ford" />
-        </div>
-        <div class="form-group">
-          <label>Model</label>
-          <input id="model" placeholder="npr. Fiesta" />
-        </div>
-        <div class="form-group" style="max-width:90px;">
-          <label>Godina</label>
-          <input id="year" type="number" placeholder="2023" />
-        </div>
-        <div class="form-group" style="max-width:110px;">
-          <label>Jezik</label>
+        <div class="form-group"><label>Marka</label><input id="make" placeholder="npr. Ford" /></div>
+        <div class="form-group"><label>Model</label><input id="model" placeholder="npr. Fiesta" /></div>
+        <div class="form-group" style="max-width:90px;"><label>Godina</label><input id="year" type="number" placeholder="2023" /></div>
+        <div class="form-group" style="max-width:110px;"><label>Jezik</label>
           <select id="language">
-            <option value="hr">HR</option>
-            <option value="en">EN</option>
-            <option value="de">DE</option>
-            <option value="it">IT</option>
-            <option value="sl">SL</option>
+            <option value="hr">HR</option><option value="en">EN</option>
+            <option value="de">DE</option><option value="it">IT</option><option value="sl">SL</option>
           </select>
         </div>
       </div>
-
       <div class="form-group" style="margin-top:10px;">
         <label>PDF priručnik</label>
         <input type="file" id="pdfFile" accept=".pdf" onchange="showFileName()" />
         <div class="file-name" id="fileName"></div>
       </div>
-
       <div id="uploadProgress" style="display:none;" class="progress">
         <div class="spinner"></div>
         <span id="progressText">Procesiranje...</span>
       </div>
       <div id="uploadMsg" style="display:none;"></div>
-
       <button class="upload-btn" id="uploadBtn" onclick="uploadManual()">⬆ Upload i indeksiraj</button>
-      <div class="empty" style="margin-top:8px;">
-        Procesiranje: ~60s za 400 str. Model se preuzima pri prvom uploadu (~130 MB).
-      </div>
+      <div class="empty" style="margin-top:8px;">Procesiranje: ~60s za 400 str.</div>
     </div>
 
-    <!-- Lista priručnika -->
     <div class="card">
       <div class="card-title">
         Indeksirani priručnici
         <span class="badge" id="manualCount">0</span>
         <button class="refresh-btn" onclick="loadVehicles()" style="margin-left:auto;">↻ Osvježi</button>
       </div>
-
       <table>
-        <thead>
-          <tr>
-            <th>Vozilo</th>
-            <th>Qdrant ključ</th>
-            <th>Segmenti</th>
-            <th>Jezik</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="vehiclesTbody">
-          <tr><td colspan="5" class="empty">Učitavanje...</td></tr>
-        </tbody>
+        <thead><tr><th>Vozilo</th><th>Qdrant ključ</th><th>Segmenti</th><th>Jezik</th><th></th></tr></thead>
+        <tbody id="vehiclesTbody"><tr><td colspan="5" class="empty">Učitavanje...</td></tr></tbody>
       </table>
-
       <div id="vehiclesMsg" style="margin-top:8px;"></div>
     </div>
-
   </div>
 </div>
 
 <script>
   const RAG_API = "/chat-api";
-  let ADMIN_KEY = "";
-  let allDispatches = [];
-  let currentFilter = "all";
+  let ADMIN_KEY = "", allDispatches = [], currentFilter = "all";
+
+  function getAuthHeaders(extra = {}) {
+    const token = localStorage.getItem("token");
+    const h = { "Content-Type": "application/json", ...extra };
+    if (token) h["Authorization"] = "Bearer " + token;
+    return h;
+  }
+
+
+
+  // Auto-login
+  (function autoLogin() {
+    const token = localStorage.getItem("token");
+    const role  = localStorage.getItem("role");
+    if (token && (role === "admin" || role === "mechanic")) {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("adminContent").style.display = "block";
+      loadDispatches();
+      loadVehicles();
+    }
+  })();
 
   function login() {
     const key = document.getElementById("adminKeyInput").value.trim();
     if (!key) return;
     ADMIN_KEY = key;
-    // Test key validity by fetching dispatches
-    fetch(`${RAG_API}/dispatches?admin_key=${encodeURIComponent(key)}`)
+    fetch(`${RAG_API}/dispatches`, { headers: getAuthHeaders() })
       .then(r => {
         if (r.ok) {
           document.getElementById("loginScreen").style.display = "none";
           document.getElementById("adminContent").style.display = "block";
-          loadDispatches();
-          loadVehicles();
-        } else {
-          document.getElementById("loginErr").textContent = "Nevažeći admin ključ.";
-        }
+          loadDispatches(); loadVehicles();
+        } else { document.getElementById("loginErr").textContent = "Nevažeći admin ključ."; }
       })
-      .catch(() => {
-        document.getElementById("loginErr").textContent = "Ne mogu se spojiti na server.";
-      });
+      .catch(() => { document.getElementById("loginErr").textContent = "Ne mogu se spojiti na server."; });
   }
-
-  function logout() {
-    ADMIN_KEY = "";
-    document.getElementById("adminContent").style.display = "none";
-    document.getElementById("loginScreen").style.display = "flex";
-    document.getElementById("adminKeyInput").value = "";
-  }
-
-  // ── Dispatches ────────────────────────────────────────────────────────────
 
   async function loadDispatches() {
     try {
-      const r = await fetch(`${RAG_API}/dispatches?admin_key=${encodeURIComponent(ADMIN_KEY)}`);
+      const r = await fetch(`${RAG_API}/dispatches`, { headers: getAuthHeaders() });
       const data = await r.json();
       allDispatches = data.dispatches || [];
       document.getElementById("dispatchCount").textContent = allDispatches.length;
       renderDispatches();
-    } catch (e) {
-      document.getElementById("dispatchTbody").innerHTML =
-        `<tr><td colspan="6" class="empty">Greška pri dohvatu.</td></tr>`;
-    }
+    } catch (e) { document.getElementById("dispatchTbody").innerHTML = `<tr><td colspan="5" class="empty">Greška pri dohvatu.</td></tr>`; }
   }
 
   function filterDispatches(status, btn) {
@@ -270,88 +185,56 @@
   }
 
   function renderDispatches() {
-    const list = currentFilter === "all"
-      ? allDispatches
-      : allDispatches.filter(d => d.status === currentFilter);
-
+    const list = currentFilter === "all" ? allDispatches : allDispatches.filter(d => d.status === currentFilter);
     const tbody = document.getElementById("dispatchTbody");
-
-    if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="6" class="empty">Nema zahtjeva.</td></tr>`;
-      return;
-    }
-
+    if (!list.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty">Nema zahtjeva.</td></tr>`; return; }
     tbody.innerHTML = list.map(d => {
-      const dt = new Date(d.created_at).toLocaleString("hr-HR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
-      return `
-        <tr>
-          <td><strong>${esc(d.vehicle_description)}</strong></td>
-          <td class="problem-cell">${esc(d.problem || "—")}</td>
-          <td class="location-cell">${esc(d.location)}</td>
-          <td>${esc(d.contact || "—")}</td>
-          <td style="white-space:nowrap;color:#9c9990;">${dt}</td>
-          <td>
-            <select class="status-select status-${d.status}"
-              onchange="updateDispatch('${d.id}', this.value)">
-              <option value="pending" ${d.status==="pending"?"selected":""}>⏳ Na čekanju</option>
-              <option value="assigned" ${d.status==="assigned"?"selected":""}>🔧 Dodijeljen</option>
-              <option value="resolved" ${d.status==="resolved"?"selected":""}>✅ Riješen</option>
-            </select>
-          </td>
-        </tr>`;
+      const dt = new Date(d.created_at).toLocaleString("hr-HR", {day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+      return `<tr>
+        <td><strong>${esc(d.vehicle_description)}</strong></td>
+        <td class="problem-cell">${esc(d.problem || "—")}</td>
+        <td class="location-cell">${esc(d.location)}${d.contact ? "<br><span style='color:#9c9990;font-size:11px;'>📞 "+esc(d.contact)+"</span>" : ""}</td>
+        <td style="white-space:nowrap;color:#9c9990;">${dt}</td>
+        <td><select class="status-select" onchange="updateDispatch('${d.id}', this.value)">
+          <option value="pending" ${d.status==="pending"?"selected":""}>⏳ Na čekanju</option>
+          <option value="assigned" ${d.status==="assigned"?"selected":""}>🔧 Dodijeljen</option>
+          <option value="resolved" ${d.status==="resolved"?"selected":""}>✅ Riješen</option>
+        </select></td>
+      </tr>`;
     }).join("");
   }
 
   async function updateDispatch(id, newStatus) {
     try {
       const r = await fetch(`${RAG_API}/dispatches/${id}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus, admin_key: ADMIN_KEY }),
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
       });
       if (r.ok) await loadDispatches();
-    } catch (e) {
-      alert("Greška pri ažuriranju: " + e.message);
-    }
+    } catch (e) { alert("Greška: " + e.message); }
   }
-
-  // ── Vehicles ──────────────────────────────────────────────────────────────
 
   async function loadVehicles() {
     try {
-      const r = await fetch(`${RAG_API}/vehicles`);
+      const r = await fetch(`${RAG_API}/vehicles`, { headers: getAuthHeaders() });
       const data = await r.json();
       const vehicles = data.vehicles || [];
       document.getElementById("manualCount").textContent = vehicles.length;
-
       const tbody = document.getElementById("vehiclesTbody");
-      if (!vehicles.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty">Nema indeksiranih priručnika.</td></tr>`;
-        return;
-      }
-      tbody.innerHTML = vehicles.map(v => `
-        <tr>
-          <td><strong>${esc(v.make)} ${esc(v.model)}</strong> <span style="color:#9c9990;">${v.year}</span></td>
-          <td><code>${esc(v.key)}</code></td>
-          <td>${v.total_chunks}</td>
-          <td style="color:#9c9990;">${(v.language||"").toUpperCase()}</td>
-          <td>
-            <button class="delete-btn" onclick="deleteVehicle('${v.key}', '${esc(v.make)} ${esc(v.model)} ${v.year}')">
-              Izbriši
-            </button>
-          </td>
-        </tr>`).join("");
-    } catch (e) {
-      document.getElementById("vehiclesTbody").innerHTML =
-        `<tr><td colspan="5" class="empty">Greška.</td></tr>`;
-    }
+      if (!vehicles.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty">Nema indeksiranih priručnika.</td></tr>`; return; }
+      tbody.innerHTML = vehicles.map(v => `<tr>
+        <td><strong>${esc(v.make)} ${esc(v.model)}</strong> <span style="color:#9c9990;">${v.year}</span></td>
+        <td><code>${esc(v.key)}</code></td>
+        <td>${v.total_chunks}</td>
+        <td style="color:#9c9990;">${(v.language||"").toUpperCase()}</td>
+        <td><button class="delete-btn" onclick="deleteVehicle('${v.key}','${esc(v.make)} ${esc(v.model)} ${v.year}')">Izbriši</button></td>
+      </tr>`).join("");
+    } catch (e) { document.getElementById("vehiclesTbody").innerHTML = `<tr><td colspan="5" class="empty">Greška.</td></tr>`; }
   }
 
   function showFileName() {
     const f = document.getElementById("pdfFile").files[0];
-    document.getElementById("fileName").textContent = f
-      ? `📄 ${f.name} (${(f.size/1024/1024).toFixed(1)} MB)`
-      : "";
+    document.getElementById("fileName").textContent = f ? `📄 ${f.name} (${(f.size/1024/1024).toFixed(1)} MB)` : "";
   }
 
   async function uploadManual() {
@@ -362,68 +245,45 @@
     const file = document.getElementById("pdfFile").files[0];
     const msgEl = document.getElementById("uploadMsg");
     const progress = document.getElementById("uploadProgress");
-
     msgEl.style.display = "none";
-    if (!make || !model || !year || !file) {
-      msgEl.className = "msg-err"; msgEl.textContent = "Popunite sva polja i odaberite PDF."; msgEl.style.display = "block"; return;
-    }
-
+    if (!make||!model||!year||!file) { msgEl.className="msg-err"; msgEl.textContent="Popunite sva polja i odaberite PDF."; msgEl.style.display="block"; return; }
     document.getElementById("uploadBtn").disabled = true;
     progress.style.display = "flex";
     document.getElementById("progressText").textContent = "Uploadam PDF i indeksiram u Qdrant... (~60s)";
-
     const form = new FormData();
-    form.append("file", file); form.append("make", make);
-    form.append("model", model); form.append("year", year);
-    form.append("language", language); form.append("admin_key", ADMIN_KEY);
-
+    form.append("file", file); form.append("make", make); form.append("model", model);
+    form.append("year", year); form.append("language", language); form.append("admin_key", ADMIN_KEY);
     try {
       const r = await fetch(`${RAG_API}/vehicles/upload`, { method: "POST", body: form });
       const data = await r.json();
       progress.style.display = "none";
-
       if (r.ok) {
         msgEl.className = "msg-ok";
         msgEl.textContent = `✅ ${data.message} · ${data.vehicle.total_chunks} segmenata indeksirano`;
-        document.getElementById("make").value = "";
-        document.getElementById("model").value = "";
-        document.getElementById("year").value = "";
-        document.getElementById("pdfFile").value = "";
+        ["make","model","year","pdfFile"].forEach(id => document.getElementById(id).value="");
         document.getElementById("fileName").textContent = "";
         loadVehicles();
-      } else {
-        msgEl.className = "msg-err";
-        msgEl.textContent = data.detail || "Greška pri uploadu.";
-      }
+      } else { msgEl.className="msg-err"; msgEl.textContent=data.detail||"Greška pri uploadu."; }
       msgEl.style.display = "block";
-    } catch (e) {
-      progress.style.display = "none";
-      msgEl.className = "msg-err"; msgEl.textContent = "Greška: " + e.message; msgEl.style.display = "block";
-    }
+    } catch(e) { progress.style.display="none"; msgEl.className="msg-err"; msgEl.textContent="Greška: "+e.message; msgEl.style.display="block"; }
     document.getElementById("uploadBtn").disabled = false;
   }
 
   async function deleteVehicle(key, label) {
     if (!confirm(`Izbriši "${label}" iz Qdrant kolekcije?`)) return;
     try {
-      const r = await fetch(`${RAG_API}/vehicles/${key}?admin_key=${encodeURIComponent(ADMIN_KEY)}`, { method: "DELETE" });
+      const r = await fetch(`${RAG_API}/vehicles/${key}`, { method:"DELETE", headers: getAuthHeaders() });
       const data = await r.json();
       const msgEl = document.getElementById("vehiclesMsg");
-      if (r.ok) {
-        msgEl.className = "msg-ok"; msgEl.textContent = data.message;
-      } else {
-        msgEl.className = "msg-err"; msgEl.textContent = data.detail || "Greška.";
-      }
+      msgEl.className = r.ok ? "msg-ok" : "msg-err";
+      msgEl.textContent = r.ok ? data.message : (data.detail||"Greška.");
       msgEl.style.display = "block";
       loadVehicles();
-    } catch (e) {
-      alert("Greška: " + e.message);
-    }
+    } catch(e) { alert("Greška: " + e.message); }
   }
 
-  function esc(s) {
-    return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-  }
+  function esc(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 </script>
+<script src="/nav.js"></script>
 </body>
 </html>

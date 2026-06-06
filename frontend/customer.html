@@ -3,377 +3,194 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Autoservis – Korisnik</title>
+  <title>Autoservis – Narudžbe</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px auto; max-width: 1250px; }
-    header { display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; }
-    .pill { font-size: 12px; padding: 6px 10px; border-radius: 999px; background:#f2f2f2; }
-    .row { display:flex; gap: 18px; flex-wrap: wrap; }
-    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; flex: 1; min-width: 320px; }
-    label { display:block; margin: 10px 0 6px; font-weight: 600; }
-    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
-    button { padding: 10px 12px; border: 0; border-radius: 6px; cursor: pointer; }
-    button.primary { background: #222; color: #fff; }
-    button.danger { background: #b00020; color: #fff; }
-    button.secondary { background: #eee; }
-    table { border-collapse: collapse; width: 100%; margin-top: 14px; }
-    th, td { border: 1px solid #ccc; padding: 8px; }
-    th { background: #eee; }
-    .msg { margin-top: 10px; white-space: pre-wrap; }
-    .ok { color: #0a7a0a; }
-    .err { color: #b00020; }
-    .muted { color: #666; font-size: 12px; }
-    textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; resize: vertical; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1916; font-size: 14px; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 32px 20px; display: flex; flex-direction: column; gap: 20px; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+    .page-sub { font-size: 12px; color: #6b6860; margin-top: 2px; }
+    .whoami { font-size: 12px; padding: 4px 12px; border-radius: 20px; background: #f0eeea; border: 0.5px solid #e0ddd8; color: #6b6860; }
+
+    .split { display: grid; grid-template-columns: 360px 1fr; gap: 20px; align-items: start; }
+    @media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
+
+    .card { background: #fff; border: 0.5px solid #e0ddd8; border-radius: 14px; padding: 22px; }
+    .card-title { font-size: 11px; font-weight: 700; color: #6b6860; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 16px; }
+
+    .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+    .field label { font-size: 11px; color: #6b6860; font-weight: 500; }
+    .field input, .field select, .field textarea { padding: 8px 10px; border: 0.5px solid #ccc9c3; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; background: #fff; color: #1a1916; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: #1a1916; }
+    .field textarea { resize: vertical; }
+
+    .section-sep { border-top: 0.5px solid #f0eeea; margin: 16px 0; padding-top: 16px; }
+    .section-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+
+    .btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #1a1916; color: #fff; width: 100%; }
+    .btn-secondary { background: #f0eeea; color: #1a1916; border: 0.5px solid #e0ddd8; width: 100%; margin-top: 8px; }
+    .btn-danger { background: #fdf0ef; color: #c0392b; border: 0.5px solid #f5c6c2; font-size: 12px; padding: 4px 10px; border-radius: 6px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; font-size: 11px; color: #9c9990; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 8px 8px 0; border-bottom: 0.5px solid #e0ddd8; }
+    td { padding: 9px 8px 9px 0; border-bottom: 0.5px solid #f0eeea; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+
+    .msg { margin-top: 10px; font-size: 13px; padding: 8px 12px; border-radius: 8px; }
+    .msg-ok  { background: #edf6f1; border: 0.5px solid #a8d8ba; color: #1a6b3a; }
+    .msg-err { background: #fdf0ef; border: 0.5px solid #f5c6c2; color: #c0392b; }
+    .muted { font-size: 12px; color: #9c9990; }
+
+    .refresh-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
   </style>
 </head>
 <body>
-
-<header>
-  <div>
-    <h1>Korisnički panel</h1>
-    <div class="muted">Customer: kreira, pregledava i otkazuje svoje narudžbe.</div>
-  </div>
-  <div>
-    <span class="pill" id="whoami">...</span>
-    <button class="secondary" onclick="logout()">Odjava</button>
-  </div>
-</header>
-
-<div class="row">
-  <div class="card">
-    <h2>Nova narudžba</h2>
-
-    <label for="vehicle_id">Vozilo</label>
-    <select id="vehicle_id"></select>
-    <div class="muted" style="margin-top:6px;">Nemaš vozilo? Dodaj ga ispod.</div>
-
-    <label for="service_date">Datum servisa</label>
-    <input id="service_date" type="date" />
-
-    <label for="notes">Opis problema (bilješke)</label>
-    <textarea id="notes" rows="4" placeholder="Npr. čuje se zvuk pri kočenju, lampica motora svijetli..."></textarea>
-
-    <button class="primary" onclick="createOrder()">Dodaj narudžbu</button>
-    <div id="createMsg" class="msg"></div>
-
-    <div style="margin-top:14px; border-top:1px solid #eee; padding-top:10px;">
-      <h3 style="margin:0 0 6px 0; font-size:16px;">Dodaj vozilo</h3>
-
-      <label for="v_make">Marka</label>
-      <input id="v_make" placeholder="npr. Audi" />
-
-      <label for="v_model">Model</label>
-      <input id="v_model" placeholder="npr. A3" />
-
-      <label for="v_plate">Registracija</label>
-      <input id="v_plate" placeholder="npr. RI-123-AB" />
-
-      <label for="v_year">Godina</label>
-      <input id="v_year" type="number" placeholder="npr. 2016 (opcionalno)" />
-
-      <button class="secondary" onclick="addVehicle()">Dodaj vozilo</button>
-      <div id="vehicleMsg" class="msg"></div>
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Moje narudžbe</div>
+      <div class="page-sub">Kreiraj i upravljaj servisnim narudžbama</div>
     </div>
+    <span class="whoami" id="whoami">…</span>
   </div>
 
-  <div class="card">
-    <h2>Moje narudžbe</h2>
-    <div class="muted">Backend automatski vraća samo tvoje narudžbe (prema tokenu).</div>
+  <div class="split">
+    <!-- FORMA -->
+    <div class="card">
+      <div class="card-title">Nova narudžba</div>
+      <div class="field">
+        <label>Vozilo</label>
+        <select id="vehicle_id"></select>
+      </div>
+      <div class="field">
+        <label>Datum servisa</label>
+        <input id="service_date" type="date" />
+      </div>
+      <div class="field">
+        <label>Opis problema</label>
+        <textarea id="notes" rows="3" placeholder="Npr. čuje se zvuk pri kočenju, lampica motora…"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="createOrder()">Dodaj narudžbu</button>
+      <div id="createMsg"></div>
 
-    <button class="secondary" onclick="loadOrders()">Osvježi</button>
+      <div class="section-sep">
+        <div class="section-title">Dodaj vozilo</div>
+        <div class="field"><label>Marka</label><input id="v_make" placeholder="Audi" /></div>
+        <div class="field"><label>Model</label><input id="v_model" placeholder="A3" /></div>
+        <div class="field"><label>Registracija</label><input id="v_plate" placeholder="RI-123-AB" /></div>
+        <div class="field"><label>Godina (opcionalno)</label><input id="v_year" type="number" placeholder="2016" /></div>
+        <button class="btn btn-secondary" onclick="addVehicle()">Dodaj vozilo</button>
+        <div id="vehicleMsg"></div>
+      </div>
+    </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Vozilo</th>
-          <th>Datum</th>
-          <th>Bilješke</th>
-          <th>Status</th>
-          <th>Akcije</th>
-        </tr>
-      </thead>
-      <tbody id="ordersTbody">
-        <tr><td colspan="6" class="muted">Učitavam...</td></tr>
-      </tbody>
-    </table>
-
-    <div id="ordersMsg" class="msg"></div>
+    <!-- NARUDŽBE -->
+    <div class="card">
+      <div class="card-title">Moje narudžbe</div>
+      <div class="refresh-row">
+        <button class="btn btn-secondary" style="width:auto;padding:6px 14px;" onclick="loadOrders()">↻ Osvježi</button>
+        <span class="muted">Prikazuju se samo tvoje narudžbe</span>
+      </div>
+      <table>
+        <thead><tr><th>Vozilo</th><th>Datum</th><th>Bilješke</th><th>Status</th><th></th></tr></thead>
+        <tbody id="ordersTbody"><tr><td colspan="5" class="muted">Učitavam…</td></tr></tbody>
+      </table>
+      <div id="ordersMsg"></div>
+    </div>
   </div>
 </div>
 
 <script>
   const API = "/api";
+  const token = () => localStorage.getItem("token");
+  const authH = () => ({ "Authorization": "Bearer " + token(), "Content-Type": "application/json" });
+  const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
-  function token() { return localStorage.getItem("token"); }
-  function role() { return localStorage.getItem("role"); }
+  const STATUS_LABELS = { scheduled:"Auto mora doći", waiting:"Auto čeka", on_lift:"Na dizalici", done:"Gotovo", cancelled:"Otkazano" };
 
-  function authHeaders() {
-    return {
-      "Authorization": "Bearer " + token(),
-      "Content-Type": "application/json"
-    };
-  }
-
-  function logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    window.location.href = "/index.html";
-  }
-
-  function setMsg(el, text, ok=false) {
+  function setMsg(id, text, ok) {
+    const el = document.getElementById(id);
     el.textContent = text;
-    el.className = "msg " + (ok ? "ok" : "err");
-  }
-
-  function escapeHtml(s) {
-    return String(s)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  function statusLabel(s) {
-    const map = {
-      scheduled: "Auto mora doći",
-      waiting: "Auto čeka",
-      on_lift: "Na dizalici",
-      done: "Gotovo",
-      cancelled: "Otkazano",
-    };
-    return map[s] || s;
-  }
-
-  (function setMinDate(){
-    const el = document.getElementById("service_date");
-    if (!el) return;
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const dd = String(today.getDate()).padStart(2, "0");
-    el.min = `${yyyy}-${mm}-${dd}`;
-  })();
-
-  async function loadMe() {
-    const pill = document.getElementById("whoami");
-    try {
-      const res = await fetch(`${API}/auth/me`, { headers: { "Authorization": "Bearer " + token() }});
-      const data = await res.json();
-      if (!res.ok) { pill.textContent = "Nevažeća prijava"; return; }
-      pill.textContent = `${data.email} (${data.role})`;
-    } catch {
-      pill.textContent = "Greška";
-    }
-  }
-
-  // ---------- VEHICLES ----------
-  async function loadVehicles() {
-    const sel = document.getElementById("vehicle_id");
-    if (!sel) return;
-
-    sel.innerHTML = `<option value="">Učitavam...</option>`;
-
-    const res = await fetch(`${API}/vehicles`, { headers: { "Authorization": "Bearer " + token() }});
-    const data = await res.json();
-
-    if (!res.ok) {
-      sel.innerHTML = `<option value="">Greška</option>`;
-      return;
-    }
-
-    if (!data.length) {
-      sel.innerHTML = `<option value="">-- Prvo dodaj vozilo --</option>`;
-      return;
-    }
-
-    sel.innerHTML = data.map(v => {
-      const label =
-        `${v.make} ${v.model}` +
-        (v.plate ? ` (${v.plate})` : "") +
-        (v.year ? ` - ${v.year}` : "");
-      return `<option value="${v.id}">${escapeHtml(label)}</option>`;
-    }).join("");
-  }
-
-  async function addVehicle() {
-    const msgEl = document.getElementById("vehicleMsg");
-    msgEl.textContent = "";
-
-    const make = document.getElementById("v_make").value.trim();
-    const model = document.getElementById("v_model").value.trim();
-    const plate = document.getElementById("v_plate").value.trim();
-    const yearRaw = document.getElementById("v_year").value.trim();
-
-    if (!make || !model || !plate) {
-      setMsg(msgEl, "Unesi marku, model i registraciju (tablicu).");
-      return;
-    }
-
-
-    const year = yearRaw ? parseInt(yearRaw, 10) : null;
-
-    try {
-      const res = await fetch(`${API}/vehicles`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({
-          make,
-          model,
-          plate,
-          year: Number.isFinite(year) ? year : null
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješno dodavanje vozila.");
-        return;
-      }
-
-      setMsg(msgEl, "Vozilo dodano!", true);
-
-      document.getElementById("v_make").value = "";
-      document.getElementById("v_model").value = "";
-      document.getElementById("v_plate").value = "";
-      document.getElementById("v_year").value = "";
-
-      await loadVehicles();
-      document.getElementById("vehicle_id").value = data.id;
-    } catch (e) {
-      setMsg(msgEl, "Greška: " + e);
-    }
-  }
-
-  // ---------- ORDERS ----------
-  async function loadOrders() {
-    const tbody = document.getElementById("ordersTbody");
-    const msgEl = document.getElementById("ordersMsg");
-    msgEl.textContent = "";
-
-    try {
-      const res = await fetch(`${API}/orders`, { headers: { "Authorization": "Bearer " + token() }});
-      const data = await res.json();
-
-      if (!res.ok) {
-        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Ne mogu dohvatiti narudžbe.");
-        return;
-      }
-
-      if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="muted">Nema narudžbi.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = data.map(o => {
-        const notesShort = (o.notes || "").trim();
-        const display = notesShort.length > 40 ? notesShort.slice(0, 40) + "…" : notesShort;
-
-        return `
-          <tr>
-            <td style="font-size:12px">${o.id}</td>
-            <td>${escapeHtml(o.vehicle)}</td>
-            <td>${escapeHtml(o.service_date)}</td>
-            <td title="${escapeHtml(notesShort)}">${escapeHtml(display || "-")}</td>
-            <td>${escapeHtml(statusLabel(o.status))}</td>
-            <td>
-              <button class="danger" onclick="cancelOrder('${o.id}', '${o.status}')">Otkazi</button>
-            </td>
-          </tr>
-        `;
-      }).join("");
-
-    } catch (e) {
-      setMsg(msgEl, "Greška: " + e);
-    }
-  }
-
-  async function createOrder() {
-    const msgEl = document.getElementById("createMsg");
-    msgEl.textContent = "";
-
-    const vehicle_id = document.getElementById("vehicle_id").value;
-    const service_date = document.getElementById("service_date").value;
-    const notes = document.getElementById("notes").value.trim();
-
-    if (!vehicle_id || !service_date) {
-      setMsg(msgEl, "Odaberi vozilo i datum.");
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API}/orders`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ vehicle_id, service_date, notes: notes || null })
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješno kreiranje narudžbe.");
-        return;
-      }
-
-      setMsg(msgEl, "Narudžba kreirana!", true);
-
-      document.getElementById("service_date").value = "";
-      document.getElementById("notes").value = "";
-
-      loadOrders();
-    } catch (e) {
-      setMsg(msgEl, "Greška: " + e);
-    }
-  }
-
-  async function cancelOrder(id, status) {
-    const msgEl = document.getElementById("ordersMsg");
-    msgEl.textContent = "";
-
-    if (status === "cancelled") {
-      setMsg(msgEl, "Ova narudžba je već otkazana.");
-      return;
-    }
-
-    if (!confirm("Sigurno želiš otkazati ovu narudžbu?")) return;
-
-    try {
-      const res = await fetch(`${API}/orders/${id}`, {
-        method: "DELETE",
-        headers: { "Authorization": "Bearer " + token() }
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Neuspješno otkazivanje.");
-        return;
-      }
-
-      setMsg(msgEl, "Narudžba otkazana.", true);
-      loadOrders();
-    } catch (e) {
-      setMsg(msgEl, "Greška: " + e);
-    }
+    el.className = "msg " + (ok ? "msg-ok" : "msg-err");
   }
 
   (function init() {
-    const t = token();
-    const r = role();
-
-    if (!t || !r) {
-      window.location.href = "/index.html";
-      return;
-    }
-    if (r !== "customer") {
-      window.location.href = "/dashboard.html";
-      return;
-    }
-
-    loadMe();
-    loadVehicles();
-    loadOrders();
+    const t = token(), r = localStorage.getItem("role");
+    if (!t || !r) { window.location.href = "/index.html"; return; }
+    if (r !== "customer") { window.location.href = "/dashboard.html"; return; }
+    loadMe(); loadVehicles(); loadOrders();
+    document.getElementById("service_date").min = new Date().toISOString().split("T")[0];
   })();
-</script>
 
+  async function loadMe() {
+    const r = await fetch(`${API}/auth/me`, { headers: { "Authorization": "Bearer " + token() } });
+    const d = await r.json();
+    document.getElementById("whoami").textContent = d.email + " (" + d.role + ")";
+  }
+
+  async function loadVehicles() {
+    const sel = document.getElementById("vehicle_id");
+    sel.innerHTML = `<option>Učitavam…</option>`;
+    const r = await fetch(`${API}/vehicles`, { headers: { "Authorization": "Bearer " + token() } });
+    const data = await r.json();
+    if (!r.ok || !data.length) { sel.innerHTML = `<option value="">— Dodaj vozilo ispod —</option>`; return; }
+    sel.innerHTML = data.map(v => `<option value="${v.id}">${esc(v.make)} ${esc(v.model)}${v.plate?" ("+v.plate+")":""}${v.year?" - "+v.year:""}</option>`).join("");
+  }
+
+  async function addVehicle() {
+    const make  = document.getElementById("v_make").value.trim();
+    const model = document.getElementById("v_model").value.trim();
+    const plate = document.getElementById("v_plate").value.trim();
+    const year  = parseInt(document.getElementById("v_year").value)||null;
+    if (!make||!model||!plate) { setMsg("vehicleMsg","Unesi marku, model i registraciju."); return; }
+    const r = await fetch(`${API}/vehicles`, { method:"POST", headers:authH(), body:JSON.stringify({make,model,plate,year}) });
+    const d = await r.json();
+    setMsg("vehicleMsg", r.ok?"Vozilo dodano!":JSON.stringify(d?.detail), r.ok);
+    if (r.ok) { ["v_make","v_model","v_plate","v_year"].forEach(id=>document.getElementById(id).value=""); await loadVehicles(); document.getElementById("vehicle_id").value=d.id; }
+  }
+
+  async function createOrder() {
+    const vid   = document.getElementById("vehicle_id").value;
+    const date  = document.getElementById("service_date").value;
+    const notes = document.getElementById("notes").value.trim();
+    if (!vid||!date) { setMsg("createMsg","Odaberi vozilo i datum."); return; }
+    const r = await fetch(`${API}/orders`, { method:"POST", headers:authH(), body:JSON.stringify({vehicle_id:vid,service_date:date,notes:notes||null}) });
+    const d = await r.json();
+    setMsg("createMsg", r.ok?"Narudžba kreirana!":JSON.stringify(d?.detail), r.ok);
+    if (r.ok) { document.getElementById("service_date").value=""; document.getElementById("notes").value=""; loadOrders(); }
+  }
+
+  async function loadOrders() {
+    const r = await fetch(`${API}/orders`, { headers:{"Authorization":"Bearer "+token()} });
+    const data = await r.json();
+    const tbody = document.getElementById("ordersTbody");
+    if (!r.ok) { setMsg("ordersMsg",JSON.stringify(data?.detail)); return; }
+    if (!data.length) { tbody.innerHTML=`<tr><td colspan="5" class="muted">Nema narudžbi.</td></tr>`; return; }
+    tbody.innerHTML = data.map(o=>{
+      const notes=(o.notes||"").slice(0,35)+((o.notes||"").length>35?"…":"");
+      return `<tr>
+        <td>${esc(o.vehicle)}</td>
+        <td style="white-space:nowrap;">${o.service_date}</td>
+        <td title="${esc(o.notes||"")}">${esc(notes||"—")}</td>
+        <td>${STATUS_LABELS[o.status]||o.status}</td>
+        <td><button class="btn-danger" onclick="cancelOrder('${o.id}','${o.status}')">Otkazi</button></td>
+      </tr>`;
+    }).join("");
+  }
+
+  async function cancelOrder(id, status) {
+    if (status==="cancelled") { setMsg("ordersMsg","Narudžba je već otkazana."); return; }
+    if (!confirm("Otkazati narudžbu?")) return;
+    const r = await fetch(`${API}/orders/${id}`, { method:"DELETE", headers:{"Authorization":"Bearer "+token()} });
+    const d = await r.json();
+    setMsg("ordersMsg", r.ok?"Narudžba otkazana.":JSON.stringify(d?.detail), r.ok);
+    if (r.ok) loadOrders();
+  }
+</script>
+<script src="/nav.js"></script>
 </body>
 </html>

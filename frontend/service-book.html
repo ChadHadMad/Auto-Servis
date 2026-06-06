@@ -8,15 +8,9 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1916; font-size: 14px; min-height: 100vh; }
 
-    .header { background: #fff; border-bottom: 0.5px solid #e0ddd8; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
-    .header-title { font-size: 16px; font-weight: 600; }
-    .header-sub { font-size: 12px; color: #6b6860; }
-    .header-links { display: flex; gap: 12px; align-items: center; }
-    .header-links a { font-size: 13px; color: #6b6860; text-decoration: none; }
-    .header-links a:hover { color: #1a1916; }
 
     /* Login */
-    .login-page { min-height: calc(100vh - 57px); display: flex; align-items: center; justify-content: center; }
+    .login-page { min-height: 80vh; display: flex; align-items: center; justify-content: center; }
     .login-card { background: #fff; border: 0.5px solid #e0ddd8; border-radius: 12px; padding: 28px; width: 340px; }
     .login-card h2 { font-size: 18px; margin-bottom: 6px; }
     .login-card p { color: #6b6860; font-size: 13px; margin-bottom: 16px; }
@@ -112,17 +106,6 @@
 </head>
 <body>
 
-<div class="header">
-  <div>
-    <div class="header-title">📋 Servisna knjižica</div>
-    <div class="header-sub">Digitalna evidencija servisne povijesti vozila</div>
-  </div>
-  <div class="header-links">
-    <a href="/chat.html">Chatbot</a>
-    <a href="/chat-admin.html">RAG Admin</a>
-    <a href="/index.html">Autoservis</a>
-    <a href="#" onclick="logout()" style="color:#c0392b;">Odjava</a>
-  </div>
 </div>
 
 <!-- Login -->
@@ -213,10 +196,30 @@
 <script>
   const RAG_API = "/chat-api";
   let ADMIN_KEY = "";
+
+  function getAuthHeaders(extra = {}) {
+    const token = localStorage.getItem("token");
+    const h = { "Content-Type": "application/json", ...extra };
+    if (token) h["Authorization"] = "Bearer " + token;
+    return h;
+  }
+
   let allVehicles = [];
   let selectedVin = null;
 
   // ── Auth ──────────────────────────────────────────────────────────────────
+
+  // Auto-login: ako je korisnik već prijavljen kao admin ili mehaničar
+  (function autoLogin() {
+    const token = localStorage.getItem("token");
+    const role  = localStorage.getItem("role");
+    if (token && (role === "admin" || role === "mechanic")) {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("mainContent").style.display = "block";
+      loadVehicles();
+    }
+  })();
+
   function login() {
     const key = document.getElementById("adminKeyInput").value.trim();
     if (!key) return;
@@ -244,7 +247,7 @@
   // ── Vehicles list ─────────────────────────────────────────────────────────
   async function loadVehicles() {
     try {
-      const r = await fetch(`${RAG_API}/service-book?admin_key=${encodeURIComponent(ADMIN_KEY)}`);
+      const r = await fetch(`${RAG_API}/service-book`, { headers: getAuthHeaders() });
       const data = await r.json();
       allVehicles = data.vehicles || [];
       document.getElementById("vehicleCount").textContent = allVehicles.length;
@@ -314,7 +317,7 @@
     }
 
     try {
-      const r = await fetch(`${RAG_API}/service-book?admin_key=${encodeURIComponent(ADMIN_KEY)}`, {
+      const r = await fetch(`${RAG_API}/service-book`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -482,7 +485,7 @@
 
     try {
       const r = await fetch(
-        `${RAG_API}/service-book/${encodeURIComponent(vin)}/entries?admin_key=${encodeURIComponent(ADMIN_KEY)}&recorded_by=${encodeURIComponent(recorded_by || 'unknown')}`,
+        `${RAG_API}/service-book/${encodeURIComponent(vin)}/entries&recorded_by=${encodeURIComponent(recorded_by || 'unknown')}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -502,7 +505,7 @@
   async function deleteVehicle(vin) {
     if (!confirm(`Sigurno obrisati vozilo ${vin} i svu servisnu povijest?`)) return;
     try {
-      const r = await fetch(`${RAG_API}/service-book/${encodeURIComponent(vin)}?admin_key=${encodeURIComponent(ADMIN_KEY)}`, { method: "DELETE" });
+      const r = await fetch(`${RAG_API}/service-book/${encodeURIComponent(vin)}`, { method: "DELETE", headers: getAuthHeaders() });
       if (r.ok) { selectedVin = null; document.getElementById("detailPanel").innerHTML = `<div class="empty" style="padding:40px 0;text-align:center;">Vozilo obrisano.</div>`; await loadVehicles(); }
       else { const d = await r.json(); alert(d.detail || "Greška pri brisanju."); }
     } catch (e) { alert("Greška: " + e.message); }
@@ -512,8 +515,8 @@
     if (!confirm(`Obrisati servisni zapis od ${date} (${km} km)?`)) return;
     try {
       const r = await fetch(
-        `${RAG_API}/service-book/${encodeURIComponent(vin)}/entries?admin_key=${encodeURIComponent(ADMIN_KEY)}`,
-        { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date, km }) }
+        `${RAG_API}/service-book/${encodeURIComponent(vin)}/entries`,
+        { method: "DELETE", headers: getAuthHeaders(), body: JSON.stringify({ date, km }) }
       );
       if (r.ok) await loadVehicles();
       else { const d = await r.json(); alert(d.detail || "Greška."); }
@@ -529,5 +532,6 @@
     return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
 </script>
+<script src="/nav.js"></script>
 </body>
 </html>

@@ -5,173 +5,145 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Autoservis – Prijava</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px auto; max-width: 900px;}
-    h1 { margin-bottom: 10px; }
-    .row { display: flex; gap: 24px; flex-wrap: wrap; }
-    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; width: 380px; }
-    label { display:block; margin: 10px 0 6px; font-weight: 600; }
-    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
-    button { margin-top: 14px; padding: 10px 12px; border: 0; border-radius: 6px; cursor: pointer; }
-    button.primary { background: #222; color: #fff; }
-    button.secondary { background: #eee; }
-    .msg { margin-top: 10px; white-space: pre-wrap; }
-    .ok { color: #0a7a0a; }
-    .err { color: #b00020; }
-    .small { color: #666; font-size: 12px; margin-top: 6px; }
-    .topbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; }
-    .pill { font-size: 12px; padding: 6px 10px; border-radius: 999px; background:#f2f2f2; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1916; min-height: 100vh; }
+
+    .page { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .page-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .page-sub { font-size: 13px; color: #6b6860; margin-bottom: 32px; }
+
+    .cards { display: flex; gap: 20px; flex-wrap: wrap; }
+    .card { background: #fff; border: 0.5px solid #e0ddd8; border-radius: 14px; padding: 28px; flex: 1; min-width: 300px; }
+    .card h2 { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+    .field label { font-size: 11px; font-weight: 600; color: #6b6860; text-transform: uppercase; letter-spacing: 0.05em; }
+    .field input { padding: 9px 12px; border: 0.5px solid #ccc9c3; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; background: #fff; color: #1a1916; }
+    .field input:focus { border-color: #1a1916; }
+
+    .btn { padding: 10px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #1a1916; color: #fff; width: 100%; margin-top: 4px; }
+    .btn-secondary { background: #f0eeea; color: #1a1916; border: 0.5px solid #e0ddd8; width: 100%; margin-top: 8px; }
+
+    .msg { margin-top: 10px; font-size: 13px; padding: 8px 12px; border-radius: 8px; }
+    .msg-ok  { background: #edf6f1; border: 0.5px solid #a8d8ba; color: #1a6b3a; }
+    .msg-err { background: #fdf0ef; border: 0.5px solid #f5c6c2; color: #c0392b; }
+
+    .hint { font-size: 12px; color: #9c9990; margin-top: 12px; line-height: 1.5; }
+    .status-pill { display: inline-block; font-size: 12px; padding: 4px 12px; border-radius: 20px; background: #f0eeea; border: 0.5px solid #e0ddd8; color: #6b6860; margin-bottom: 24px; }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <h1>Autoservis</h1>
-    <div class="pill" id="statusPill">Niste prijavljeni</div>
-  </div>
 
-  <p class="small">
-    Nakon prijave sprema se token u browser (localStorage) i preusmjerava na dashboard.
-  </p>
+<div class="page">
+  <div class="page-title">Dobrodošli u AutoServis</div>
+  <div class="page-sub">Prijavite se ili registrirajte za pristup sustavu.</div>
+  <div class="status-pill" id="statusPill">Niste prijavljeni</div>
 
-  <div class="row">
+  <div class="cards">
     <!-- LOGIN -->
     <div class="card">
       <h2>Prijava</h2>
-
-      <label for="loginEmail">Email</label>
-      <input id="loginEmail" type="email" placeholder="npr. user@test.com" />
-
-      <label for="loginPass">Lozinka</label>
-      <input id="loginPass" type="password" placeholder="••••••••" />
-
-      <button class="primary" onclick="login()">Prijavi se</button>
-      <button class="secondary" onclick="fillDemo()">Popuni demo</button>
-
-      <div id="loginMsg" class="msg"></div>
+      <div class="field">
+        <label>Email</label>
+        <input id="loginEmail" type="email" placeholder="npr. user@test.com" />
+      </div>
+      <div class="field">
+        <label>Lozinka</label>
+        <input id="loginPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()" />
+      </div>
+      <button class="btn btn-primary" onclick="login()">Prijavi se</button>
+      <button class="btn btn-secondary" onclick="fillDemo()">Popuni demo podatke</button>
+      <div id="loginMsg"></div>
     </div>
 
     <!-- REGISTER -->
     <div class="card">
-      <h2>Registracija (customer)</h2>
-
-      <label for="regName">Ime</label>
-      <input id="regName" type="text" placeholder="npr. Matija" />
-
-      <label for="regEmail">Email</label>
-      <input id="regEmail" type="email" placeholder="npr. novi@user.com" />
-
-      <label for="regPass">Lozinka</label>
-      <input id="regPass" type="password" placeholder="min 6 znakova" />
-
-      <button class="primary" onclick="register()">Registriraj</button>
-
-      <div id="regMsg" class="msg"></div>
-      <div class="small">
-        Registracija kreira korisnika s ulogom <b>customer</b>. Ulogu kasnije mijenja admin.
+      <h2>Registracija</h2>
+      <div class="field">
+        <label>Ime i prezime</label>
+        <input id="regName" type="text" placeholder="npr. Matija Tomc" />
       </div>
+      <div class="field">
+        <label>Email</label>
+        <input id="regEmail" type="email" placeholder="npr. novi@user.com" />
+      </div>
+      <div class="field">
+        <label>Lozinka</label>
+        <input id="regPass" type="password" placeholder="min 6 znakova" onkeydown="if(event.key==='Enter')register()" />
+      </div>
+      <button class="btn btn-primary" onclick="register()">Registriraj se</button>
+      <div id="regMsg"></div>
+      <div class="hint">Registracija kreira korisnika s ulogom <strong>customer</strong>. Ulogu naknadno mijenja admin.</div>
     </div>
   </div>
+</div>
 
-  <script>
-    const API = "/api";
+<script>
+  const API = "/api";
 
-    function setMsg(el, text, ok=false) {
-      el.textContent = text;
-      el.className = "msg " + (ok ? "ok" : "err");
+  function setMsg(id, text, ok) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = "msg " + (ok ? "msg-ok" : "msg-err");
+  }
+
+  function setStatusPill() {
+    const role = localStorage.getItem("role");
+    const pill = document.getElementById("statusPill");
+    pill.textContent = role ? "Prijavljeni ste kao: " + role : "Niste prijavljeni";
+  }
+
+  (function init() {
+    setStatusPill();
+    if (localStorage.getItem("token") && localStorage.getItem("role")) {
+      window.location.href = "/dashboard.html";
     }
+  })();
 
-    function setStatusPill() {
-      const token = localStorage.getItem("token");
-      const role = localStorage.getItem("role");
-      const pill = document.getElementById("statusPill");
-      if (token && role) pill.textContent = "Prijavljeni ste kao: " + role;
-      else pill.textContent = "Niste prijavljeni";
-    }
+  function fillDemo() {
+    document.getElementById("loginEmail").value = "user@test.com";
+    document.getElementById("loginPass").value = "pass123";
+  }
 
-    (function autoRedirectIfLoggedIn(){
-      const token = localStorage.getItem("token");
-      const role = localStorage.getItem("role");
+  async function login() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPass").value;
+    if (!email || !password) { setMsg("loginMsg", "Unesi email i lozinku."); return; }
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { setMsg("loginMsg", data?.detail || "Login neuspješan."); return; }
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("role", data.role);
+      setMsg("loginMsg", "OK! Preusmjeravam...", true);
       setStatusPill();
-      if (token && role) {
-        window.location.href = "/dashboard.html";
-      }
-    })();
+      window.location.href = "/dashboard.html";
+    } catch (e) { setMsg("loginMsg", "Greška: " + e); }
+  }
 
-    function fillDemo() {
-      document.getElementById("loginEmail").value = "user@test.com";
-      document.getElementById("loginPass").value = "pass123";
-    }
-
-    async function login() {
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPass").value;
-      const msgEl = document.getElementById("loginMsg");
-      msgEl.textContent = "";
-
-      if (!email || !password) {
-        setMsg(msgEl, "Unesi email i lozinku.");
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API}/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Login neuspješan.");
-          return;
-        }
-
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("role", data.role);
-
-        setMsg(msgEl, "OK! Preusmjeravam...", true);
-        setStatusPill();
-
-        window.location.href = "/dashboard.html";
-      } catch (e) {
-        setMsg(msgEl, "Greška: " + e);
-      }
-    }
-
-    async function register() {
-      const name = document.getElementById("regName").value.trim();
-      const email = document.getElementById("regEmail").value.trim();
-      const password = document.getElementById("regPass").value;
-      const msgEl = document.getElementById("regMsg");
-      msgEl.textContent = "";
-
-      if (!name || !email || !password) {
-        setMsg(msgEl, "Unesi ime, email i lozinku.");
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API}/auth/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          setMsg(msgEl, data?.detail ? JSON.stringify(data.detail, null, 2) : "Registracija neuspješna.");
-          return;
-        }
-
-        setMsg(msgEl, "Registracija OK! Sada se možeš prijaviti.", true);
-
-        document.getElementById("loginEmail").value = email;
-        document.getElementById("loginPass").value = password;
-      } catch (e) {
-        setMsg(msgEl, "Greška: " + e);
-      }
-    }
-  </script>
+  async function register() {
+    const name = document.getElementById("regName").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPass").value;
+    if (!name || !email || !password) { setMsg("regMsg", "Popuni sva polja."); return; }
+    try {
+      const res = await fetch(`${API}/auth/register`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { setMsg("regMsg", data?.detail || "Registracija neuspješna."); return; }
+      setMsg("regMsg", "Registracija OK! Možeš se prijaviti.", true);
+      document.getElementById("loginEmail").value = email;
+      document.getElementById("loginPass").value = password;
+    } catch (e) { setMsg("regMsg", "Greška: " + e); }
+  }
+</script>
+<script src="/nav.js"></script>
 </body>
 </html>
