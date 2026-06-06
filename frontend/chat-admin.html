@@ -207,7 +207,7 @@
   async function updateDispatch(id, newStatus) {
     try {
       const r = await fetch(`${RAG_API}/dispatches/${id}/status`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
+        method: "PUT", headers: getAuthHeaders(),
         body: JSON.stringify({ status: newStatus }),
       });
       if (r.ok) await loadDispatches();

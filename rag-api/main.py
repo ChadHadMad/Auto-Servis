@@ -277,7 +277,11 @@ async def chat(req: ChatRequest):
 
     dispatch = None
     location = req.location or location_from_reply
-    if location and needs_dispatch:
+
+    # Kreiraj dispatch ako:
+    # 1. LLM kaže da treba (needs_dispatch) i ima lokaciju, ILI
+    # 2. Frontend šalje kontakt broj (drugi korak) — znači korisnik je već potvrdio
+    if location and (needs_dispatch or req.contact):
         dispatch = create_dispatch(
             vehicle_key=req.vehicle_key,
             vehicle_description=vehicle_info,
