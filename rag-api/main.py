@@ -405,7 +405,7 @@ def sb_add_entry(vin: str, payload: ServiceEntryCreate, admin_key: str = "", rec
 
     history = vehicle.get("service_history", [])
 
-    # Auto ML fine-tune — kad postoji prethodni zapis
+    # Auto ML fine-tune — izračunaj stvarni interval iz prethodnog zapisa
     if len(history) >= 1:
         prev = history[-1]
         actual_interval = payload.km - prev["km"]
@@ -419,14 +419,16 @@ def sb_add_entry(vin: str, payload: ServiceEntryCreate, admin_key: str = "", rec
             except Exception:
                 avg_daily = 40.0
 
-            fuel_type = "diesel" if any(x in (v.get("model") or "").lower()
-                                        for x in ["tdi", "cdi", "dci", "crdi", "hdi"]) else "petrol"
             try:
                 n_real = add_real_datapoint(
-                    brand=v["make"], fuel_type=fuel_type, year=v["year"],
-                    engine_cc=v.get("engine_cc") or 1600, engine_kw=v.get("engine_kw") or 85,
-                    total_km_at_service=payload.km, avg_daily_km=round(avg_daily, 1),
-                    num_prev_services=len(history), actual_km_interval=actual_interval,
+                    brand=v["make"],
+                    avg_daily_km=round(avg_daily, 1),
+                    year=v["year"],
+                    engine_cc=v.get("engine_cc") or 1600,
+                    engine_kw=v.get("engine_kw") or 85,
+                    total_km_at_service=payload.km,
+                    num_prev_services=len(history),
+                    actual_km_interval=actual_interval,
                 )
                 print(f"[ml] Real datapoint added. Total: {n_real}")
             except Exception as e:
@@ -450,7 +452,6 @@ def sb_delete_entry(vin: str, payload: ServiceEntryDelete, admin_key: str = ""):
 
 class MLPredictRequest(BaseModel):
     brand: str
-    fuel_type: str
     year: int
     engine_cc: int
     engine_kw: int
@@ -464,10 +465,14 @@ class MLPredictRequest(BaseModel):
 def ml_predict_endpoint(payload: MLPredictRequest, admin_key: str = ""):
     require_service_auth(admin_key)
     return ml_predict(
-        brand=payload.brand, fuel_type=payload.fuel_type, year=payload.year,
-        engine_cc=payload.engine_cc, engine_kw=payload.engine_kw,
-        total_km=payload.total_km, avg_daily_km=payload.avg_daily_km,
-        num_prev_services=payload.num_prev_services, month=payload.month,
+        brand=payload.brand,
+        avg_daily_km=payload.avg_daily_km,
+        year=payload.year,
+        engine_cc=payload.engine_cc,
+        engine_kw=payload.engine_kw,
+        total_km=payload.total_km,
+        num_prev_services=payload.num_prev_services,
+        month=payload.month,
     )
 
 
@@ -479,12 +484,14 @@ def ml_predict_for_vehicle(vin: str, current_km: int, avg_daily_km: float, admin
         raise HTTPException(status_code=404, detail="Vozilo nije pronađeno")
     v = vehicle["vehicle"]
     history = vehicle.get("service_history", [])
-    fuel_type = "diesel" if any(x in (v.get("model") or "").lower()
-                                for x in ["tdi", "cdi", "dci", "crdi", "hdi"]) else "petrol"
     result = ml_predict(
-        brand=v["make"], fuel_type=fuel_type, year=v["year"],
-        engine_cc=v.get("engine_cc") or 1600, engine_kw=v.get("engine_kw") or 85,
-        total_km=current_km, avg_daily_km=avg_daily_km, num_prev_services=len(history),
+        brand=v["make"],
+        avg_daily_km=avg_daily_km,
+        year=v["year"],
+        engine_cc=v.get("engine_cc") or 1600,
+        engine_kw=v.get("engine_kw") or 85,
+        total_km=current_km,
+        num_prev_services=len(history),
     )
     result["vin"] = vin
     result["vehicle"] = f"{v['make']} {v['model']} {v['year']}"

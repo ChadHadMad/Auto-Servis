@@ -306,7 +306,7 @@
               stroke-dasharray="345"
               stroke-dashoffset="345"/>
             <text x="140" y="120" class="gauge-center-text" fill="var(--text)"
-              font-family="Space Mono" font-size="28" font-weight="700" id="gaugeKm">—</text>
+              font-family="Space Mono" font-size="28" font-weight="700" id="gaugeKm">-</text>
             <text x="140" y="142" class="gauge-center-text" fill="var(--text2)"
               font-family="Space Grotesk" font-size="11" id="gaugeLabel">km do servisa</text>
           </svg>
@@ -314,23 +314,23 @@
           <div class="gauge-stats">
             <div class="gauge-stat">
               <div class="gs-label">Sljedeći servis</div>
-              <div class="gs-value blue" id="nextKm">—</div>
+              <div class="gs-value blue" id="nextKm">-</div>
             </div>
             <div class="gauge-stat">
               <div class="gs-label">Procij. datum</div>
-              <div class="gs-value" id="predDate" style="font-size:14px;">—</div>
+              <div class="gs-value" id="predDate" style="font-size:14px;">-</div>
             </div>
             <div class="gauge-stat">
               <div class="gs-label">Dana do servisa</div>
-              <div class="gs-value" id="daysLeft">—</div>
+              <div class="gs-value" id="daysLeft">-</div>
             </div>
             <div class="gauge-stat">
               <div class="gs-label">Interval (km)</div>
-              <div class="gs-value blue" id="intervalKm">—</div>
+              <div class="gs-value blue" id="intervalKm">-</div>
             </div>
           </div>
 
-          <div class="status-badge ok" id="statusBadge">— Odaberi vozilo —</div>
+          <div class="status-badge ok" id="statusBadge">- Odaberi vozilo -</div>
         </div>
       </div>
 
@@ -353,8 +353,8 @@
           <div class="card-title">Model info</div>
           <div class="model-chips">
             <div class="chip chip-purple">Gradient Boosting</div>
-            <div class="chip chip-green" id="chipR2">R² —</div>
-            <div class="chip chip-purple" id="chipMAE">MAE — km</div>
+            <div class="chip chip-green" id="chipR2">R² -</div>
+            <div class="chip chip-purple" id="chipMAE">MAE - km</div>
           </div>
           <div class="feature-bars" id="featureBars"></div>
         </div>
@@ -456,7 +456,7 @@
       return;
     }
 
-    // Weighted average — noviji intervali imaju vecu tezinu
+    // Weighted average - noviji intervali imaju vecu tezinu
     let totalWeight = 0, weightedSum = 0;
     let lastRate = null;
     for (let i = 1; i < history.length; i++) {
@@ -513,7 +513,8 @@
 
     try {
       const r = await fetch(
-        `${RAG_API}/ml/predict/${encodeURIComponent(selectedVehicle.vin)}?admin_key=${encodeURIComponent(ADMIN_KEY)}&current_km=${currentKm}&avg_daily_km=${dailyKm}`
+        `${RAG_API}/ml/predict/${encodeURIComponent(selectedVehicle.vin)}?admin_key=${encodeURIComponent(ADMIN_KEY)}&current_km=${currentKm}&avg_daily_km=${dailyKm}`,
+        { method: "POST" }
       );
       const data = await r.json();
       renderGauge(data, currentKm);
@@ -524,13 +525,13 @@
   }
 
   function renderGauge(data, currentKm) {
-    const interval = data.predicted_km_interval || 15000;
-    const nextKm   = currentKm + interval;
+    const interval  = data.predicted_km_interval || 15000;
+    const nextKm    = currentKm + interval;
     const remaining = interval;
-    const days     = data.days_until_service;
-    const predDate = data.predicted_date;
+    const days      = data.days_until_service;
+    const predDate  = data.predicted_date;
 
-    // Gauge fill — 0% = overdue, 100% = full interval remaining
+    // Gauge fill - 0% = overdue, 100% = full interval remaining
     const pct = Math.max(0, Math.min(1, remaining / interval));
     const arcLen = 345;
     const offset = arcLen - (pct * arcLen);
@@ -554,11 +555,11 @@
     // Stats
     document.getElementById("nextKm").textContent = nextKm.toLocaleString();
     document.getElementById("predDate").textContent = predDate
-      ? new Date(predDate).toLocaleDateString("hr-HR", {day:"2-digit",month:"2-digit",year:"numeric"})
-      : "—";
+      ? new Date(predDate + "T12:00:00").toLocaleDateString("hr-HR", {day:"2-digit",month:"2-digit",year:"numeric"})
+      : "-";
 
     const daysEl = document.getElementById("daysLeft");
-    daysEl.textContent = days !== null && days !== undefined ? days + " d" : "—";
+    daysEl.textContent = days !== null && days !== undefined ? days + " d" : "-";
     daysEl.className = "gs-value " + (days <= 0 ? "red" : days <= 30 ? "orange" : "green");
 
     document.getElementById("intervalKm").textContent = interval.toLocaleString();
@@ -589,7 +590,7 @@
         <div class="h-cell">
           <div class="h-date">${e.date}</div>
           <div class="h-km">${e.km.toLocaleString()}</div>
-          <div class="h-oil">${esc(e.oil_type || '—')}</div>
+          <div class="h-oil">${esc(e.oil_type || '-')}</div>
           ${interval ? `<div class="h-interval">+${interval.toLocaleString()} km</div>` : ''}
         </div>`;
     }).join("");
@@ -689,8 +690,8 @@
 
   // ── Model metrics ─────────────────────────────────────────────────────────
   function renderModelMetrics() {
-    document.getElementById("chipR2").textContent = `R² ${modelMetrics.r2 || "—"}`;
-    document.getElementById("chipMAE").textContent = `MAE ${modelMetrics.mae_km ? Math.round(modelMetrics.mae_km).toLocaleString() : "—"} km`;
+    document.getElementById("chipR2").textContent = `R² ${modelMetrics.r2 || "-"}`;
+    document.getElementById("chipMAE").textContent = `MAE ${modelMetrics.mae_km ? Math.round(modelMetrics.mae_km).toLocaleString() : "-"} km`;
 
     const fi = modelMetrics.feature_importance || {};
     const labels = {
