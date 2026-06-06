@@ -511,23 +511,58 @@
     const dailyKm   = parseFloat(document.getElementById("dailyKm").value) || 40;
     if (!currentKm) return;
 
-    try {
-      const r = await fetch(
-        `${RAG_API}/ml/predict/${encodeURIComponent(selectedVehicle.vin)}?admin_key=${encodeURIComponent(ADMIN_KEY)}&current_km=${currentKm}&avg_daily_km=${dailyKm}`,
-        { method: "POST" }
-      );
-      const data = await r.json();
-      renderGauge(data, currentKm);
-      document.getElementById("mainGrid").style.display = "grid";
-    } catch (e) {
-      console.error(e);
+    // Fiksni interval iz servisne knjizice
+    // Uzmi zadnji next_service_km ili izracunaj iz povijesti
+    const history = [...(selectedVehicle.service_history || [])].sort((a, b) => a.km - b.km);
+    const lastEntry = history.length > 0 ? history[history.length - 1] : null;
+
+    let serviceInterval = 15000; // hardcap default
+    let nextServiceKm = null;
+
+    if (lastEntry) {
+      if (lastEntry.next_service_km && lastEntry.next_service_km > lastEntry.km) {
+        // Koristimo next_service_km iz zadnjeg zapisa
+        nextServiceKm = lastEntry.next_service_km;
+        serviceInterval = nextServiceKm - lastEntry.km;
+      } else if (history.length >= 2) {
+        // Izracunaj prosjecni interval iz povijesti (max 15000)
+        const intervals = [];
+        for (let i = 1; i < history.length; i++) {
+          const diff = history[i].km - history[i-1].km;
+          if (diff > 1000 && diff <= 30000) intervals.push(diff);
+        }
+        if (intervals.length > 0) {
+          serviceInterval = Math.min(15000, Math.round(intervals.reduce((a,b) => a+b) / intervals.length / 500) * 500);
+        }
+        nextServiceKm = lastEntry.km + serviceInterval;
+      } else {
+        nextServiceKm = lastEntry.km + serviceInterval;
+      }
     }
+
+    // Izracunaj km do servisa i datum
+    const kmRemaining = nextServiceKm ? nextServiceKm - currentKm : serviceInterval;
+    const daysUntil = dailyKm > 0 ? Math.round(kmRemaining / dailyKm) : null;
+    const predDate = daysUntil !== null
+      ? new Date(Date.now() + daysUntil * 86400000).toISOString().split("T")[0]
+      : null;
+
+    const syntheticData = {
+      predicted_km_interval: serviceInterval,
+      predicted_date: predDate,
+      days_until_service: daysUntil,
+      model_mae_km: null,
+      model_r2: null,
+    };
+
+    renderGauge(syntheticData, currentKm, nextServiceKm, kmRemaining);
+    document.getElementById("mainGrid").style.display = "grid";
   }
 
-  function renderGauge(data, currentKm) {
+  function renderGauge(data, currentKm, nextServiceKm, kmRemaining) {
     const interval  = data.predicted_km_interval || 15000;
-    const nextKm    = currentKm + interval;
-    const remaining = interval;
+    const nextKm    = nextServiceKm || (currentKm + interval);
+    const remaining = kmRemaining !== undefined ? kmRemaining : interval;
     const days      = data.days_until_service;
     const predDate  = data.predicted_date;
 

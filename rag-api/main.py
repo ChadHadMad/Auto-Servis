@@ -96,7 +96,7 @@ Manual excerpts:
 Rules:
 1. For simple problems (flat tire, dead battery, blown fuse, low fuel, warning light) — give clear numbered steps from the manual. Do NOT use [DISPATCH_NEEDED] for these.
 2. For overheating — tell user to STOP immediately, turn off engine, wait 10 min, do NOT open coolant cap while hot. Do NOT use [DISPATCH_NEEDED] unless coolant is leaking or engine won't cool down.
-3. ONLY use [DISPATCH_NEEDED] for truly dangerous problems: brake failure, fire smell, airbag warning light, complete steering loss, engine seizure, fuel leak.
+3. ONLY use [DISPATCH_NEEDED] for truly dangerous problems: brake failure, fire smell, airbag warning light, complete steering loss, engine seizure, fuel leak. Ask for their phone number so a technician can contact them directly.
 4. Always reference which page the information is from.
 5. Keep answers short and practical."""
 
