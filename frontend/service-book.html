@@ -319,7 +319,7 @@
     try {
       const r = await fetch(`${RAG_API}/service-book`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           vin, plate,
           vehicle: { make, model, year, engine_cc: cc, engine_kw: kw },
@@ -485,10 +485,10 @@
 
     try {
       const r = await fetch(
-        `${RAG_API}/service-book/${encodeURIComponent(vin)}/entries&recorded_by=${encodeURIComponent(recorded_by || 'unknown')}`,
+        `${RAG_API}/service-book/${encodeURIComponent(vin)}/entries?recorded_by=${encodeURIComponent(recorded_by || 'unknown')}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
           body: JSON.stringify({ date, km, oil_type: oil, items, extra }),
         }
       );

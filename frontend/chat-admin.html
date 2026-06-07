@@ -254,7 +254,14 @@
     form.append("file", file); form.append("make", make); form.append("model", model);
     form.append("year", year); form.append("language", language); form.append("admin_key", ADMIN_KEY);
     try {
-      const r = await fetch(`${RAG_API}/vehicles/upload`, { method: "POST", body: form });
+      const authH = {};
+      const token = localStorage.getItem("token");
+      if (token) authH["Authorization"] = "Bearer " + token;
+      const r = await fetch(`${RAG_API}/vehicles/upload`, {
+        method: "POST",
+        headers: authH,
+        body: form
+      });
       const data = await r.json();
       progress.style.display = "none";
       if (r.ok) {

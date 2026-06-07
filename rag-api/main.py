@@ -191,10 +191,10 @@ async def upload_vehicle(
     model: str = Form(...),
     year: int = Form(...),
     language: str = Form("hr"),
-    admin_key: str = Form(...),
+    admin_key: str = Form(default=""),
+    authorization: str = Header(default=""),
 ):
-    if admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=401, detail="Nevažeći admin ključ")
+    require_service_auth(admin_key=admin_key, token=authorization)
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Samo PDF datoteke")
 
@@ -214,9 +214,8 @@ async def upload_vehicle(
 
 
 @app.delete("/vehicles/{key}")
-def remove_rag_vehicle(key: str, admin_key: str):
-    if admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=401, detail="Nevažeći admin ključ")
+def remove_rag_vehicle(key: str, admin_key: str = "", authorization: str = Header(default="")):
+    require_service_auth(admin_key=admin_key, token=authorization)
     qdrant_delete(key)
     return {"message": f"Vozilo {key} obrisano"}
 
